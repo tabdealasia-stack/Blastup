@@ -124,12 +124,13 @@ export class SafeModeManager {
     }
 
     // ── Sending window check (F14) ──────────────────────────────────────
-    const utcHour = new Date().getUTCHours();
-    if (utcHour < SENDING_WINDOW_START_UTC || utcHour >= SENDING_WINDOW_END_UTC) {
+    const istHour = Number(new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(new Date()));
+    const istWindowStart = 9;
+    const istWindowEnd = 21;
+    if (istHour < istWindowStart || istHour >= istWindowEnd) {
       throw new SafeModeError(
         'F14',
-        `Outside allowed sending window (${SENDING_WINDOW_START_UTC}:00 – ` +
-        `${SENDING_WINDOW_END_UTC}:00 UTC). Current UTC hour: ${utcHour}.`
+        `Outside allowed sending window (${istWindowStart}:00 - ${istWindowEnd}:00 IST). Current IST hour: ${istHour}.`
       );
     }
 
@@ -269,3 +270,4 @@ export class SafeModeManager {
     await this.advanceTierIfEligible(phoneId);
   }
 }
+

@@ -2,7 +2,7 @@ import {
   makeWASocket,
   DisconnectReason,
   useMultiFileAuthState,
-  fetchLatestBaileysVersion,
+  fetchLatestWaWebVersion,
   makeCacheableSignalKeyStore,
   WASocket,
   proto,
@@ -16,6 +16,7 @@ import QRCode from 'qrcode';
 import { env } from '../config/env';
 import { logger } from '../config/logger';
 import { WhatsAppInstance } from '../models/WhatsAppInstance';
+import { WhatsAppAccount } from '../models/WhatsAppAccount';
 import { Chat } from '../models/Chat';
 import { Contact } from '../models/Contact';
 import { Message } from '../models/Message';
@@ -139,7 +140,7 @@ export async function initWhatsApp(instanceId: string): Promise<void> {
     );
 
     const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
-    const { version } = await fetchLatestBaileysVersion();
+    const { version } = await fetchLatestWaWebVersion({});
 
     const sock = makeWASocket({
       version,
@@ -212,9 +213,19 @@ export async function initWhatsApp(instanceId: string): Promise<void> {
               sockets.delete(duplicate.instanceId);
             }
             await WhatsAppInstance.updateOne(
-              { instanceId: duplicate.instanceId },
-              { $set: { status: 'disconnected', lastDisconnectedAt: new Date() } }
-            );
+  { instanceId: duplicate.instanceId },
+  { $set: { status: 'disconnected', lastDisconnectedAt: new Date() } }
+);
+
+await WhatsAppAccount.updateOne(
+  { instanceId: duplicate.instanceId },
+  {
+    $set: {
+      status: 'disconnected',
+      lastSeenAt: new Date(),
+    },
+  }
+);
             logger.warn(`[${instanceId}] Disconnected duplicate session ${duplicate.instanceId} for ${connectedPhone}`);
           }
         }
@@ -259,8 +270,25 @@ export async function initWhatsApp(instanceId: string): Promise<void> {
             lastConnectedAt: new Date(),
           }
         );
+        await WhatsAppAccount.updateOne(
+          { instanceId },
+          {
+            $set: {
+              phoneNumber: connectedPhone,
+              displayName: info?.name || null,
+              status: 'connected',
+              sessionPath: getSessionDir(instanceId),
+              safeMode: true,
+              connectedAt: new Date(),
+              lastSeenAt: new Date(),
+            },
+          },
+          { upsert: false }
+        );
+
         waEvents.emit(`connected:${instanceId}`, info);
       }
+
 
       if (connection === 'close') {
         connectingStates.set(instanceId, false);
@@ -269,6 +297,8 @@ export async function initWhatsApp(instanceId: string): Promise<void> {
         const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
         const isManual = manualDisconnects.get(instanceId) || false;
         const isLoggedOut = statusCode === DisconnectReason.loggedOut;
+        logger.warn(`[${instanceId}] WhatsApp connection closed`, { statusCode, isManual, isLoggedOut, error: String(lastDisconnect?.error || '') });
+logger.warn(`[${instanceId}] WhatsApp connection closed`, { statusCode, isManual, isLoggedOut, error: String(lastDisconnect?.error || '') });
         const isQrCycle = !isManual && !isLoggedOut;
 
         // Only mark truly disconnected for manual logouts
@@ -278,6 +308,17 @@ export async function initWhatsApp(instanceId: string): Promise<void> {
             { status: 'disconnected', lastDisconnectedAt: new Date() }
           );
         }
+
+          await WhatsAppAccount.updateOne(
+            { instanceId },
+            {
+              $set: {
+                status: 'disconnected',
+                lastSeenAt: new Date(),
+              },
+            }
+          );
+
 
         // Invalidated creds (logged out from the phone, expired link, etc.)
         // must not survive on disk — the next connect attempt would just
@@ -1040,3 +1081,6 @@ export async function deleteSession(instanceId: string): Promise<void> {
   manualDisconnects.set(instanceId, false);
   connectingStates.set(instanceId, false);
 }
+
+
+

@@ -8,6 +8,9 @@ import * as messageService from '../services/message.service';
 import { env } from '../config/env';
 import Boom from '@hapi/boom';
 import fs from 'fs';
+import { MessageLog } from '../models/MessageLog';
+import { WhatsAppAccount } from '../models/WhatsAppAccount';
+
 
 // Multer config — store with UUID filename
 const storage = multer.diskStorage({
@@ -41,13 +44,43 @@ export async function sendText(req: AuthRequest, res: Response, next: NextFuncti
   try {
     const instanceId = req.user?.id || 'default';
     const { to, text } = req.body;
+
     const result = await messageService.sendText(instanceId, { to, text });
-    res.json({ success: true, data: { messageId: result?.key.id } });
+    const messageId = result?.key.id || null;
+
+    // Tenant/API-key scoped delivery log.
+    // Logging must not turn a successful WhatsApp send into a failed request.
+    if (req.user?.clientId && req.user?.apiKeyId) {
+      try {
+        const account = await WhatsAppAccount.findOne({
+          clientId: req.user.clientId,
+          instanceId,
+        }).select('_id');
+
+        await MessageLog.create({
+          clientId: req.user.clientId,
+          apiKeyId: req.user.apiKeyId,
+          whatsappAccountId: account?._id || null,
+          to,
+          messageType: 'text',
+          messagePreview: text?.substring(0, 500) || null,
+          status: 'sent',
+          providerMessageId: messageId,
+          sentAt: new Date(),
+        });
+      } catch (logError) {
+        console.error('MessageLog persistence failed:', logError);
+      }
+    }
+
+    res.json({
+      success: true,
+      data: { messageId },
+    });
   } catch (err) {
     next(err);
   }
 }
-
 export async function sendImage(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const instanceId = req.user?.id || 'default';

@@ -6,7 +6,7 @@ export interface IUser extends Document {
   username: string;
   phone?: string;
   password: string;
-  role: 'admin' | 'user';
+  role: 'superadmin' | 'admin' | 'user';
   failedLoginAttempts: number;
   lockedUntil: Date | null;
   lastLoginAt: Date | null;
@@ -57,7 +57,7 @@ const userSchema = new Schema<IUser>(
     },
     role: {
       type: String,
-      enum: ['admin', 'user'],
+      enum: ['superadmin', 'admin', 'user'],
       default: 'admin',
     },
     failedLoginAttempts: {

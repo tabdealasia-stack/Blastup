@@ -21,10 +21,15 @@ import apiKeyRoutes from './routes/apikey.routes';
 import campaignRoutes from './routes/campaign.routes';
 import chatbotRoutes from './routes/chatbot.routes';
 import adminRoutes from './routes/admin.routes';
+import clientRoutes from './routes/client.routes';
+import travelBookingRoutes from './routes/travel-booking.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import reminderRoutes from './routes/reminder.routes';
+import notificationEventRoutes from './routes/notification-event.routes';
+import tabdealRoutes from './routes/tabdeal.routes';
 
 import { initCampaignScheduler } from './services/campaignScheduler';
+import { initClientCleanupWorker } from './workers/clientCleanupWorker';
 import { normalizeExistingDatabase } from './utils/jid';
 import { createSafeModeRouter, safeModeErrorHandler } from './safemode';
 import { getSafeModeManager } from './config/safemode';
@@ -37,6 +42,7 @@ export function createApp(): express.Application {
 
   // ── Initialize background services ──────────────────────────────
   initCampaignScheduler();
+  initClientCleanupWorker();
   setInterval(() => processDueReminders().catch(() => {}), 30_000).unref();
   normalizeExistingDatabase().catch(() => { });
 
@@ -169,6 +175,8 @@ export function createApp(): express.Application {
 
   app.use('/api/reminders', reminderRoutes);
 
+  app.use('/api/notifications', notificationEventRoutes);
+
   app.use(
     '/api/auth',
     authRoutes
@@ -242,12 +250,30 @@ export function createApp(): express.Application {
     adminRoutes
   );
 
+  app.use(
+    '/api/admin',
+    apiLimiter,
+    clientRoutes
+  );
+
+  app.use(
+    '/api/travel',
+    travelBookingRoutes
+  );
+
   // ── Safe Mode API ────────────────────────────────────────────────
   app.use(
     '/api/safemode',
     apiLimiter,
     authenticate,
     createSafeModeRouter(getSafeModeManager(), express)
+  );
+
+  // ── TABDEAL Management API ───────────────────────────────────────
+  app.use(
+    '/api/tabdeal',
+    apiLimiter,
+    tabdealRoutes
   );
 
   // ── Error Handling ──────────────────────────────────────────────
@@ -265,3 +291,6 @@ export function createApp(): express.Application {
 
   return app;
 }
+
+
+

@@ -381,4 +381,42 @@ export const analyticsApi = {
   overview: (days = 7) => request<{ success: boolean; data: any }>('/api/analytics/overview', { params: { days } }),
 };
 
+// ── Tabdeal Management ──────────────────────────────────────────────
+export const tabdealApi = {
+  // Categories
+  getCategories: () => request<{ success: boolean; data: any[] }>('/api/tabdeal/categories'),
+  createCategory: (data: any) => request<{ success: boolean; data: any }>('/api/tabdeal/categories', { method: 'POST', body: JSON.stringify(data) }),
+  updateCategory: (id: string, data: any) => request<{ success: boolean; data: any }>(`/api/tabdeal/categories/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteCategory: (id: string) => request<{ success: boolean; message: string }>(`/api/tabdeal/categories/${id}`, { method: 'DELETE' }),
+  
+  // Template Packs
+  getTemplatePacks: () => request<{ success: boolean; data: any[] }>('/api/tabdeal/template-packs'),
+  createTemplatePack: (data: any) => request<{ success: boolean; data: any }>('/api/tabdeal/template-packs', { method: 'POST', body: JSON.stringify(data) }),
+  updateTemplatePack: (id: string, data: any) => request<{ success: boolean; data: any }>(`/api/tabdeal/template-packs/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  getTemplatePack: (id: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/template-packs/${id}`),
+  deleteTemplatePack: (id: string) => request<{ success: boolean; message: string }>(`/api/tabdeal/template-packs/${id}`, { method: 'DELETE' }),
+
+  // Clients
+  getClients: (params?: any) => request<{ success: boolean; data: any[]; pagination: any }>('/api/tabdeal/clients', { params }),
+  createClient: (data: any) => request<{ success: boolean; data: any }>('/api/tabdeal/clients', { method: 'POST', body: JSON.stringify(data) }),
+  getClient: (id: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/clients/${id}`),
+  updateClient: (id: string, data: any) => request<{ success: boolean; data: any }>(`/api/tabdeal/clients/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  updateClientStatus: (id: string, status: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/clients/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+
+  // Templates
+  getTemplates: (params?: any) => request<{ success: boolean; data: any[]; pagination: any }>('/api/tabdeal/templates', { params }),
+  createTemplate: (data: any) => request<{ success: boolean; data: any }>('/api/tabdeal/templates', { method: 'POST', body: JSON.stringify(data) }),
+  getTemplate: (id: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/templates/${id}`),
+  updateTemplate: (id: string, data: any) => request<{ success: boolean; data: any }>(`/api/tabdeal/templates/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  updateTemplateStatus: (id: string, status: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/templates/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  deleteTemplate: (id: string) => request<{ success: boolean; message: string }>(`/api/tabdeal/templates/${id}`, { method: 'DELETE' }),
+
+  // Logs & Diagnostics
+  getMessageLogs: (params?: any) => request<{ success: boolean; data: any[]; pagination: any }>('/api/tabdeal/message-logs', { params }),
+  getMessageLog: (id: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/message-logs/${id}`),
+  getEventLogs: (params?: any) => request<{ success: boolean; data: any[]; pagination: any }>('/api/tabdeal/event-logs', { params }),
+  getEventLog: (id: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/event-logs/${id}`),
+  getDashboardMetrics: () => request<{ success: boolean; data: any }>('/api/tabdeal/dashboard-metrics'),
+};
+
 export { ApiError };

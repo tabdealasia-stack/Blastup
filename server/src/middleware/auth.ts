@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { Session } from '../models/Session';
 import { User } from '../models/User';
+import { Client } from '../models/Client';
 import { hashToken } from '../utils/crypto';
 import { logger } from '../config/logger';
 import Boom from '@hapi/boom';
@@ -14,30 +15,71 @@ export interface AuthRequest extends Request {
     id: string;
     username: string;
     role: string;
+    clientId?: string;
+    apiKeyId?: string;
   };
 }
-
-export async function authenticate(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+export async function authenticate(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
     // 1. Check for API Key (Headers)
-    const apiKeyHeader = req.headers['x-api-key'] || req.headers['authorization']?.replace('Bearer ', '');
-    
+    const apiKeyHeader =
+      req.headers['x-api-key'] ||
+      req.headers['authorization']?.replace('Bearer ', '');
+
     if (apiKeyHeader && typeof apiKeyHeader === 'string') {
       const keyHash = hashToken(apiKeyHeader);
-      const apiKeyDoc = await ApiKey.findOne({ keyHash });
-      
-      if (apiKeyDoc) {
-        // Update lastUsedAt in the background
-        ApiKey.updateOne({ _id: apiKeyDoc._id }, { lastUsedAt: new Date() }).exec();
 
+      const apiKeyDoc = await ApiKey.findOne({
+        keyHash,
+        status: 'active',
+      });
+
+      if (apiKeyDoc) {
+        // API key must belong to a valid Client.
+        const client = await Client.findById(apiKeyDoc.clientId).select(
+          '_id userId businessName status'
+        );
+
+        if (!client) {
+          throw Boom.unauthorized('Client account not found');
+        }
+
+        if (client.status !== 'active') {
+          throw Boom.forbidden('Client account is not active');
+        }
+
+        // Verify the Client's User still exists and is active.
+        const user = await User.findById(client.userId).select(
+          '_id username role isActive'
+        );
+
+        if (!user || !user.isActive) {
+          throw Boom.unauthorized('Client user account not found or deactivated');
+        }
+
+        // Update lastUsedAt in the background.
+        ApiKey.updateOne(
+          { _id: apiKeyDoc._id },
+          { lastUsedAt: new Date() }
+        )
+          .exec()
+          .catch(() => {});
+
+        // IMPORTANT:
+        // Keep User ID here because existing Blastup WhatsApp services
+        // use req.user.id as the WhatsApp instanceId.
         req.user = {
-          // Must be the owning account's id, not the key's own id — this is
-          // used everywhere as the WhatsApp instanceId, so using the key's
-          // id here would point at an instance that never exists.
-          id: apiKeyDoc.userId.toString(),
-          username: `API_KEY_${apiKeyDoc.name}`,
-          role: 'api',
-        };
+  id: user._id.toString(),
+  username: `API_KEY_${apiKeyDoc.name}`,
+  role: 'api',
+  clientId: client._id.toString(),
+  apiKeyId: apiKeyDoc._id.toString(),
+};
+
         return next();
       }
     }
@@ -46,11 +88,14 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     const token = req.cookies?.wa_token;
 
     if (!token) {
-      throw Boom.unauthorized('Authentication required (Invalid API Key or missing Session Cookie)');
+      throw Boom.unauthorized(
+        'Authentication required (Invalid API Key or missing Session Cookie)'
+      );
     }
 
     // Verify JWT signature and expiry
     let decoded: jwt.JwtPayload;
+
     try {
       decoded = jwt.verify(token, env.JWT_SECRET) as jwt.JwtPayload;
     } catch (err) {
@@ -59,13 +104,21 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
 
     // Verify session exists and is not revoked
     const tokenHash = hashToken(token);
-    const session = await Session.findOne({ tokenHash, isRevoked: false });
+
+    const session = await Session.findOne({
+      tokenHash,
+      isRevoked: false,
+    });
+
     if (!session) {
       throw Boom.unauthorized('Session expired or revoked');
     }
 
     // Load user
-    const user = await User.findById(decoded.sub).select('username role isActive');
+    const user = await User.findById(decoded.sub).select(
+      'username role isActive'
+    );
+
     if (!user || !user.isActive) {
       throw Boom.unauthorized('User not found or deactivated');
     }
@@ -77,7 +130,12 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     };
 
     // Track last seen — non-blocking background update
-    User.updateOne({ _id: user._id }, { lastSeenAt: new Date() }).exec().catch(() => {});
+    User.updateOne(
+      { _id: user._id },
+      { lastSeenAt: new Date() }
+    )
+      .exec()
+      .catch(() => {});
 
     next();
   } catch (error) {
@@ -85,10 +143,28 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
   }
 }
 
-export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction): void {
-  if (req.user?.role !== 'admin') {
+export function requireAdmin(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): void {
+  if (req.user?.role !== 'admin' && req.user?.role !== 'superadmin') {
     next(Boom.forbidden('Admin access required'));
     return;
   }
+
+  next();
+}
+
+export function requireSuperadmin(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): void {
+  if (req.user?.role !== 'superadmin') {
+    next(Boom.forbidden('Superadmin access required'));
+    return;
+  }
+
   next();
 }
