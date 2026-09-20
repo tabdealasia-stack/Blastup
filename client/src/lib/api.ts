@@ -403,6 +403,12 @@ export const tabdealApi = {
   updateClient: (id: string, data: any) => request<{ success: boolean; data: any }>(`/api/tabdeal/clients/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   updateClientStatus: (id: string, status: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/clients/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
 
+  // Client WhatsApp Admin
+  provisionClientWhatsApp: (clientId: string) => request<{ success: boolean }>(`/api/tabdeal/clients/${clientId}/whatsapp/provision`, { method: 'POST' }),
+  getClientWhatsAppQR: (clientId: string) => request<{ success: boolean; data: { qr: string } }>(`/api/tabdeal/clients/${clientId}/whatsapp/qr`),
+  getClientWhatsAppStatus: (clientId: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/clients/${clientId}/whatsapp/status`),
+  reconnectClientWhatsApp: (clientId: string) => request<{ success: boolean }>(`/api/tabdeal/clients/${clientId}/whatsapp/reconnect`, { method: 'POST' }),
+
   // Templates
   getTemplates: (params?: any) => request<{ success: boolean; data: any[]; pagination: any }>('/api/tabdeal/templates', { params }),
   createTemplate: (data: any) => request<{ success: boolean; data: any }>('/api/tabdeal/templates', { method: 'POST', body: JSON.stringify(data) }),

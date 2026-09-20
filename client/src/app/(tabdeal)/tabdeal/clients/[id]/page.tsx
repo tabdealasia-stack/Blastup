@@ -5,6 +5,7 @@ import { ArrowLeft, CheckCircle, ShieldBan, Smartphone, FileText, Key, Code, Mes
 import Header from '@/components/layout/Header';
 import { tabdealApi } from '@/lib/api';
 import Link from 'next/link';
+import ClientWhatsApp from './ClientWhatsApp';
 
 export default function ClientDetailPage({ params }: { params: { id: string } }) {
   const [client, setClient] = useState<any>(null);
@@ -177,40 +178,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
         {activeTab === 'whatsapp' && (
           <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px' }}>
             <h3 style={{ margin: '0 0 24px', fontSize: '18px', color: '#0f172a' }}>WhatsApp Connection</h3>
-            {client.whatsapp ? (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
-                  <div style={{ 
-                    width: '64px', height: '64px', borderRadius: '50%', 
-                    background: client.whatsapp.status === 'connected' ? '#dcfce7' : '#f1f5f9',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: client.whatsapp.status === 'connected' ? '#10b981' : '#64748b'
-                  }}>
-                    <Smartphone size={32} />
-                  </div>
-                  <div>
-                    <h4 style={{ margin: '0 0 4px', fontSize: '18px', color: '#0f172a' }}>{client.whatsapp.phoneNumber || 'No Number Connected'}</h4>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: client.whatsapp.status === 'connected' ? '#10b981' : '#64748b', fontWeight: 500, textTransform: 'capitalize' }}>
-                      <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: client.whatsapp.status === 'connected' ? '#10b981' : '#94a3b8' }}></span>
-                      {client.whatsapp.status}
-                    </div>
-                  </div>
-                </div>
-                
-                <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <h4 style={{ margin: '0 0 16px', fontSize: '14px', color: '#475569', fontWeight: 600 }}>Connection Actions</h4>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <button style={{ padding: '8px 16px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#334155', fontWeight: 500, cursor: 'pointer' }}>Generate QR Code</button>
-                    <button style={{ padding: '8px 16px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', color: '#334155', fontWeight: 500, cursor: 'pointer' }}>Reconnect</button>
-                    {client.whatsapp.status === 'connected' && (
-                      <button style={{ padding: '8px 16px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '6px', color: '#b91c1c', fontWeight: 500, cursor: 'pointer' }}>Logout</button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div style={{ color: '#64748b' }}>No WhatsApp account provisioned for this client.</div>
-            )}
+            <ClientWhatsApp clientId={client._id} initialStatus={client.whatsapp} />
           </div>
         )}
 

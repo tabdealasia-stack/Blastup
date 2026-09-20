@@ -44,6 +44,13 @@ router.post('/clients/:id/disconnect', lifecycleController.disconnectClient);
 router.post('/clients/:id/suspend', lifecycleController.suspend);
 router.post('/clients/:id/deletion-request', lifecycleController.requestDeletion);
 
+// Client WhatsApp Admin
+import * as clientWhatsappController from '../controllers/tabdeal/client-whatsapp.controller';
+router.post('/clients/:id/whatsapp/provision', clientWhatsappController.provision);
+router.get('/clients/:id/whatsapp/qr', clientWhatsappController.getQR);
+router.get('/clients/:id/whatsapp/status', clientWhatsappController.getStatus);
+router.post('/clients/:id/whatsapp/reconnect', clientWhatsappController.reconnect);
+
 // Templates
 router.get('/templates', templateController.getTemplates);
 router.post('/templates', validate(templateController.createTemplateSchema), templateController.createTemplate);
