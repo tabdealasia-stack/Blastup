@@ -405,7 +405,7 @@ export const tabdealApi = {
 
   // Client WhatsApp Admin
   provisionClientWhatsApp: (clientId: string) => request<{ success: boolean }>(`/api/tabdeal/clients/${clientId}/whatsapp/provision`, { method: 'POST' }),
-  getClientWhatsAppQR: (clientId: string) => request<{ success: boolean; data: { qr: string } }>(`/api/tabdeal/clients/${clientId}/whatsapp/qr`),
+  getClientWhatsAppQR: (clientId: string, t?: number) => request<{ success: boolean; data: { qr: string } }>(`/api/tabdeal/clients/${clientId}/whatsapp/qr`, t ? { params: { _t: t } } : undefined),
   getClientWhatsAppStatus: (clientId: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/clients/${clientId}/whatsapp/status`),
   reconnectClientWhatsApp: (clientId: string) => request<{ success: boolean }>(`/api/tabdeal/clients/${clientId}/whatsapp/reconnect`, { method: 'POST' }),
 

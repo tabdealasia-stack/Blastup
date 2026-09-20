@@ -1,4 +1,4 @@
-﻿import { Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import { Client } from '../../models/Client';
 import { WhatsAppAccount } from '../../models/WhatsAppAccount';
@@ -78,11 +78,15 @@ export async function getQR(req: AuthRequest, res: Response, next: NextFunction)
     const { id: clientId } = req.params;
     const instanceId = await resolveClientInstance(clientId);
     
+    // Step 5: Prevent browser caching of QR response completely
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     const qr = await wa.getQRCode(instanceId);
     if (!qr) {
-      // If no QR exists, we can instruct to reconnect or provision
-      await wa.restartWhatsApp(instanceId);
-      res.status(404).json({ success: false, error: 'QR not available. Reconnection initiated, try again.' });
+      // Step 11: Do not auto-reconnect on GET /qr. The frontend explicitly calls /reconnect.
+      res.status(404).json({ success: false, error: 'QR not available.' });
       return;
     }
     res.json({ success: true, data: { qr } });
