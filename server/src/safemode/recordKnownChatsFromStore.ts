@@ -1,51 +1,65 @@
 import { SafeModeManager } from './SafeModeManager';
 import { Chat } from '../models/Chat';
+import { Contact } from '../models/Contact';
 
 /**
  * recordKnownChatsFromStore
  *
- * Seeds the Safe Mode store with the number of existing chats for this
- * phone number, sourced from our local MongoDB Chat collection.
+ * Seeds the Safe Mode store with the number of existing chats and contacts for this
+ * phone number, sourced from our local MongoDB Chat and Contact collections.
  *
- * This prevents existing numbers (with real chat histories) from being
- * treated as brand-new accounts when Safe Mode first activates. Without
- * this call, a number with 1000 existing contacts would hit Tier 1's
- * "new chats per day" cap immediately.
+ * This prevents existing numbers (with real chat histories or saved contacts) from being
+ * treated as brand-new accounts when Safe Mode first activates.
  *
- * Also pre-populates the seen-JIDs set by marking all existing chat IDs
- * as "already seen", so existing contacts are not counted as new chats
- * on first send.
+ * Also pre-populates the seen-JIDs set by marking all existing chat IDs and contact JIDs
+ * as "already seen", so existing contacts are not counted as new chats on first send.
  *
  * Call this immediately before `wrapBaileysSocket` on `connection === 'open'`.
  */
 export async function recordKnownChatsFromStore(
-  _sock: unknown, // socket param kept for API symmetry â€” not needed here
+  _sock: unknown, // socket param kept for API symmetry — not needed here
   manager: SafeModeManager,
   phoneId: string
 ): Promise<void> {
   try {
-    // Get all chat JIDs for this instance
-    const chats = await Chat.find({ instanceId: phoneId }, { chatId: 1, _id: 0 }).lean();
-
-    if (chats.length === 0) return;
-
     const store = (manager as any).store;
     if (!store) return;
 
-    // Set the known chat count so the manager knows baseline
-    await store.setKnownChatCount(phoneId, chats.length);
+    // Get all chat JIDs and contact JIDs for this instance
+    const [chats, contacts] = await Promise.all([
+      Chat.find({ instanceId: phoneId }, { chatId: 1, _id: 0 }).lean(),
+      Contact.find({ instanceId: phoneId }, { jid: 1, _id: 0 }).lean()
+    ]);
 
-    // Mark each existing chat JID as seen so they don't count as "new chats"
+    // Use a Set to deduplicate JIDs from chats and contacts
+    const uniqueJids = new Set<string>();
+    
+    chats.forEach((chat: any) => {
+      if (chat.chatId) uniqueJids.add(chat.chatId);
+    });
+    
+    contacts.forEach((contact: any) => {
+      if (contact.jid) uniqueJids.add(contact.jid);
+    });
+
+    if (uniqueJids.size === 0) return;
+
+    // Set the known chat count so the manager knows baseline
+    await store.setKnownChatCount(phoneId, uniqueJids.size);
+
+    // Mark each existing JID as seen so they don't count as "new chats"
     // Batch in groups of 100 to avoid overwhelming Redis with individual calls
     const BATCH_SIZE = 100;
-    for (let i = 0; i < chats.length; i += BATCH_SIZE) {
-      const batch = chats.slice(i, i + BATCH_SIZE);
+    const jidsArray = Array.from(uniqueJids);
+    
+    for (let i = 0; i < jidsArray.length; i += BATCH_SIZE) {
+      const batch = jidsArray.slice(i, i + BATCH_SIZE);
       await Promise.all(
-        batch.map((chat: any) => store.markJidSeen(phoneId, chat.chatId))
+        batch.map((jid: string) => store.markJidSeen(phoneId, jid))
       );
     }
   } catch (err) {
-    // Non-fatal â€” if this fails, Safe Mode will still work, just more conservative
+    // Non-fatal — if this fails, Safe Mode will still work, just more conservative
     console.warn(`[SafeMode] recordKnownChatsFromStore failed for ${phoneId}:`, err);
   }
 }
