@@ -5,7 +5,6 @@ import ClientTemplate from '../models/ClientTemplate';
 import { NotificationTemplate } from '../models/NotificationTemplate';
 import { WhatsAppAccount } from '../models/WhatsAppAccount';
 import { NotificationEventLog } from '../models/NotificationEventLog';
-import * as messageService from './message.service';
 
 export interface NotificationEventParams {
   clientId: string;
@@ -13,7 +12,7 @@ export interface NotificationEventParams {
   event: string;
   eventId: string;
   to: string;
-  variables?: Record<string, string | number | boolean | null | undefined>;
+  variables?: Record<string, any>;
 }
 
 export async function sendNotificationEvent(params: NotificationEventParams) {
@@ -49,14 +48,10 @@ export async function sendNotificationEvent(params: NotificationEventParams) {
     throw Boom.badRequest('Recipient phone number is required');
   }
 
-  const client = await Client.findById(clientId).select(
-    '_id businessName status'
-  );
-
+  const client = await Client.findById(clientId).select('_id status');
   if (!client) {
     throw Boom.notFound('Client not found');
   }
-
   if (client.status !== 'active') {
     throw Boom.forbidden('Client is not active');
   }
@@ -64,32 +59,25 @@ export async function sendNotificationEvent(params: NotificationEventParams) {
   const account = await WhatsAppAccount.findOne({
     clientId: client._id,
     status: 'connected',
-  }).select('_id instanceId');
-
+  }).select('_id');
   if (!account) {
-    throw Boom.serverUnavailable(
-      'WhatsApp is not connected for this client'
-    );
+    throw Boom.serverUnavailable('WhatsApp is not connected for this client');
   }
 
   const templateAssignments = await ClientTemplate.find({
     clientId: client._id,
     enabled: true,
-  }).select('templateId customMessage customVariables');
-
+  }).select('templateId');
   if (!templateAssignments.length) {
     throw Boom.notFound('No enabled notification templates found');
   }
 
-  const templateIds = templateAssignments.map(
-    (assignment) => assignment.templateId
-  );
-
+  const templateIds = templateAssignments.map((a) => a.templateId);
   const template = await NotificationTemplate.findOne({
     _id: { $in: templateIds },
     event: normalizedEvent,
     active: true,
-  }).select('_id message variables');
+  }).select('_id');
 
   if (!template) {
     return {
@@ -97,44 +85,6 @@ export async function sendNotificationEvent(params: NotificationEventParams) {
       status: 'skipped',
       reason: 'No active template configured for this event',
     };
-  }
-
-  const assignment = templateAssignments.find(
-    (item) => item.templateId.toString() === template._id.toString()
-  );
-
-  const messageTemplate =
-    assignment?.customMessage?.trim() || template.message;
-
-  const mergedVariables: Record<string, string> = {};
-
-  for (const [key, value] of Object.entries(variables)) {
-    if (value !== null && value !== undefined) {
-      mergedVariables[key] = String(value);
-    }
-  }
-
-  if (assignment?.customVariables?.length) {
-    for (const value of assignment.customVariables) {
-      const separatorIndex = value.indexOf('=');
-
-      if (separatorIndex > 0) {
-        const key = value.substring(0, separatorIndex).trim();
-        const replacement = value.substring(separatorIndex + 1).trim();
-
-        if (key) {
-          mergedVariables[key] = replacement;
-        }
-      }
-    }
-  }
-
-  let message = messageTemplate;
-
-  for (const [key, value] of Object.entries(mergedVariables)) {
-    message = message
-      .replace(new RegExp(`\\{\\{\\s*${escapeRegExp(key)}\\s*\\}\\}`, 'g'), value)
-      .replace(new RegExp(`\\{${escapeRegExp(key)}\\}`, 'g'), value);
   }
 
   let eventLog = await NotificationEventLog.findOneAndUpdate(
@@ -149,6 +99,10 @@ export async function sendNotificationEvent(params: NotificationEventParams) {
         status: 'processing',
         errorCode: null,
         errorMessage: null,
+        recipient: to,
+        variables,
+        attempts: 0,
+        lockedUntil: null,
       },
     },
     { new: true }
@@ -161,6 +115,10 @@ export async function sendNotificationEvent(params: NotificationEventParams) {
         event: normalizedEvent,
         eventId: normalizedEventId,
         status: 'processing',
+        recipient: to,
+        variables,
+        attempts: 0,
+        lockedUntil: null,
       });
     } catch (error: any) {
       if (error.code === 11000) {
@@ -185,71 +143,9 @@ export async function sendNotificationEvent(params: NotificationEventParams) {
     }
   }
 
-  try {
-    const result = await messageService.sendText(account.instanceId, {
-      to,
-      text: message,
-    });
-
-    const messageId = result?.key?.id || null;
-
-    const { MessageLog } = await import('../models/MessageLog');
-
-    const messageLog = await MessageLog.create({
-      clientId: client._id,
-      apiKeyId,
-      whatsappAccountId: account._id,
-      to,
-      messageType: 'template',
-      templateId: template._id,
-      messagePreview: message.substring(0, 500),
-      status: 'sent',
-      providerMessageId: messageId,
-      sentAt: new Date(),
-    });
-
-    eventLog.status = 'sent';
-    eventLog.messageLogId = messageLog._id;
-    await eventLog.save();
-
-    return {
-      success: true,
-      status: 'sent',
-      eventLogId: eventLog._id,
-      messageLogId: messageLog._id,
-      messageId,
-    };
-      } catch (error: any) {
-      // Map SafeModeError to Boom so it gets the correct 429 status and EventLog captures it
-      let finalError = error;
-      if (error && error.name === 'SafeModeError') {
-         const code = error.code;
-         const httpStatus = (code === 'F13' || code === 'F15') ? 422 : 429;
-         finalError = Boom.boomify(new Error(error.detail || error.message), { statusCode: httpStatus });
-         finalError.output.payload.error = 'SafeModeError';
-         finalError.output.payload.code = code;
-         // Retain original name for fallback
-         finalError.name = 'SafeModeError';
-      }
-
-      eventLog.status = 'failed';
-      eventLog.errorCode =
-        (finalError as { output?: { statusCode?: number } })?.output?.statusCode
-          ? String(
-              (finalError as { output: { statusCode: number } }).output.statusCode
-            )
-          : 'SEND_FAILED';
-      eventLog.errorMessage =
-        finalError instanceof Error ? finalError.message : String(finalError);
-  
-      await eventLog.save();
-  
-      throw finalError;
-    }
+  return {
+    success: true,
+    status: 'accepted',
+    eventLogId: eventLog._id,
+  };
 }
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-

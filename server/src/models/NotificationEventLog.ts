@@ -8,18 +8,27 @@ export type NotificationEventStatus =
 
 export interface INotificationEventLog extends Document {
   clientId: mongoose.Types.ObjectId;
+  apiKeyId?: mongoose.Types.ObjectId;
   event: string;
   eventId: string;
   status: NotificationEventStatus;
   messageLogId?: mongoose.Types.ObjectId | null;
   errorCode?: string | null;
   errorMessage?: string | null;
+  
+  // Phase 9A-7 Outbox Fields
+  recipient?: string;
+  variables?: Record<string, any>;
+  attempts: number;
+  lockedUntil?: Date | null;
+
   createdAt: Date;
   updatedAt: Date;
 }
 
 const notificationEventLogSchema = new Schema<INotificationEventLog>(
   {
+    apiKeyId: { type: Schema.Types.ObjectId, ref: 'ApiKey', required: false, index: true },
     clientId: {
       type: Schema.Types.ObjectId,
       ref: 'Client',
@@ -69,6 +78,28 @@ const notificationEventLogSchema = new Schema<INotificationEventLog>(
       default: null,
       maxlength: 500,
     },
+
+    // Phase 9A-7 Outbox Fields
+    recipient: {
+      type: String,
+      required: false,
+    },
+    
+    variables: {
+      type: Schema.Types.Mixed,
+      default: {},
+    },
+
+    attempts: {
+      type: Number,
+      default: 0,
+    },
+
+    lockedUntil: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true,
@@ -79,6 +110,11 @@ const notificationEventLogSchema = new Schema<INotificationEventLog>(
 notificationEventLogSchema.index(
   { clientId: 1, event: 1, eventId: 1 },
   { unique: true }
+);
+
+// Index to quickly find eligible pending outbox tasks
+notificationEventLogSchema.index(
+  { status: 1, lockedUntil: 1, attempts: 1 }
 );
 
 export const NotificationEventLog: Model<INotificationEventLog> =

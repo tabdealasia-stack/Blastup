@@ -1,3 +1,4 @@
+import { initOutboxWorker } from './services/outbox.worker';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
@@ -43,6 +44,7 @@ export function createApp(): express.Application {
   // ── Initialize background services ──────────────────────────────
   initCampaignScheduler();
   initClientCleanupWorker();
+  initOutboxWorker();
   setInterval(() => processDueReminders().catch(() => {}), 30_000).unref();
   normalizeExistingDatabase().catch(() => { });
 
@@ -291,6 +293,7 @@ export function createApp(): express.Application {
 
   return app;
 }
+
 
 
 

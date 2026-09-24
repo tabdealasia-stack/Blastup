@@ -74,6 +74,8 @@ async function bootstrap() {
     // ── Graceful Shutdown ────────────────────────────────────────
     const gracefulShutdown = async (signal: string) => {
       logger.info(`${signal} received, shutting down gracefully...`);
+        const { stopOutboxWorker } = await import('./services/outbox.worker');
+        stopOutboxWorker();
 
       server.close(async () => {
         try {
@@ -114,3 +116,8 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+
+
+
+

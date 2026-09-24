@@ -26,7 +26,11 @@ export async function sendEvent(
       variables,
     });
 
-    res.json(result);
+    if (result.status === 'accepted') {
+      res.status(202).json(result);
+    } else {
+      res.json(result);
+    }
   } catch (err) {
     next(err);
   }
