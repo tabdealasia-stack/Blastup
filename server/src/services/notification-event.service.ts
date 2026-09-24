@@ -97,6 +97,7 @@ export async function sendNotificationEvent(params: NotificationEventParams) {
     {
       $set: {
         status: 'processing',
+        apiKeyId,
         errorCode: null,
         errorMessage: null,
         recipient: to,
@@ -115,6 +116,7 @@ export async function sendNotificationEvent(params: NotificationEventParams) {
         event: normalizedEvent,
         eventId: normalizedEventId,
         status: 'processing',
+        apiKeyId,
         recipient: to,
         variables,
         attempts: 0,
@@ -149,3 +151,4 @@ export async function sendNotificationEvent(params: NotificationEventParams) {
     eventLogId: eventLog._id,
   };
 }
+

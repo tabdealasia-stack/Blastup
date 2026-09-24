@@ -196,6 +196,7 @@ async function processEvent(eventLog: INotificationEventLog) {
     try {
       const messageLog = new MessageLog({
         clientId: client._id,
+        apiKeyId: eventLog.apiKeyId,
         whatsappAccountId: account._id,
         to: eventLog.recipient,
         messageType: 'template',
@@ -236,7 +237,10 @@ async function processEvent(eventLog: INotificationEventLog) {
     if (error && error.name === 'SafeModeError') {
        errorCode = error.code || 'SAFEMODE_REJECTED';
        isTerminal = true; // SafeMode rejections should not be retried infinitely
-    } else if (error.isBoom) {
+    } else if (error && error.name === 'ValidationError') {
+         errorCode = 'VALIDATION_FAILED';
+         isTerminal = true; // Schema validation errors shouldn't be retried
+      } else if (error.isBoom) {
        errorCode = String(error.output.statusCode);
        isTerminal = true; // Validation errors shouldn't be retried
     }
@@ -273,3 +277,5 @@ async function processEvent(eventLog: INotificationEventLog) {
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
+
