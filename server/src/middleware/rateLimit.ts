@@ -4,11 +4,15 @@ import { logger } from '../config/logger';
 
 // General API rate limit
 export const apiLimiter = rateLimit({
-  skip: () => true,
+  // skip: () => true, // Removed in 9A-6
   windowMs: env.RATE_LIMIT_WINDOW_MS,
   max: env.RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => {
+    // Prefer authenticated clientId for fair tenant isolation, fallback to IP
+    return (req as any).user?.clientId || req.ip;
+  },
   message: {
     success: false,
     error: 'Too many requests, please try again later.',
@@ -22,7 +26,7 @@ export const apiLimiter = rateLimit({
 
 // Strict login rate limit
 export const loginLimiter = rateLimit({
-  skip: () => true,
+  // skip: () => true, // Removed in 9A-6
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: env.LOGIN_RATE_LIMIT_MAX, // default 5
   standardHeaders: true,
@@ -38,9 +42,9 @@ export const loginLimiter = rateLimit({
   },
 });
 
-// QR endpoint — prevent spamming
+// QR endpoint - prevent spamming
 export const qrLimiter = rateLimit({
-  skip: () => true,
+  // skip: () => true, // Removed in 9A-6
   windowMs: 60 * 1000,
   max: 10,
   message: { success: false, error: 'Too many QR requests' },
@@ -48,8 +52,12 @@ export const qrLimiter = rateLimit({
 
 // Send message limiter
 export const sendLimiter = rateLimit({
-  skip: () => true,
+  // skip: () => true, // Removed in 9A-6
   windowMs: 60 * 1000, // 1 minute
   max: 30, // 30 messages per minute
+  keyGenerator: (req) => {
+    // Strictly isolate quotas per client if authenticated, fallback to IP
+    return (req as any).user?.clientId || req.ip;
+  },
   message: { success: false, error: 'Sending too fast, slow down.' },
 });

@@ -219,24 +219,37 @@ export async function sendNotificationEvent(params: NotificationEventParams) {
       messageLogId: messageLog._id,
       messageId,
     };
-  } catch (error) {
-    eventLog.status = 'failed';
-    eventLog.errorCode =
-      (error as { output?: { statusCode?: number } })?.output?.statusCode
-        ? String(
-            (error as { output: { statusCode: number } }).output.statusCode
-          )
-        : 'SEND_FAILED';
-    eventLog.errorMessage =
-      error instanceof Error ? error.message : String(error);
+      } catch (error: any) {
+      // Map SafeModeError to Boom so it gets the correct 429 status and EventLog captures it
+      let finalError = error;
+      if (error && error.name === 'SafeModeError') {
+         const code = error.code;
+         const httpStatus = (code === 'F13' || code === 'F15') ? 422 : 429;
+         finalError = Boom.boomify(new Error(error.detail || error.message), { statusCode: httpStatus });
+         finalError.output.payload.error = 'SafeModeError';
+         finalError.output.payload.code = code;
+         // Retain original name for fallback
+         finalError.name = 'SafeModeError';
+      }
 
-    await eventLog.save();
-
-    throw error;
-  }
+      eventLog.status = 'failed';
+      eventLog.errorCode =
+        (finalError as { output?: { statusCode?: number } })?.output?.statusCode
+          ? String(
+              (finalError as { output: { statusCode: number } }).output.statusCode
+            )
+          : 'SEND_FAILED';
+      eventLog.errorMessage =
+        finalError instanceof Error ? finalError.message : String(finalError);
+  
+      await eventLog.save();
+  
+      throw finalError;
+    }
 }
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
 

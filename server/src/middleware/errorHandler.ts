@@ -13,6 +13,7 @@ interface ApiError extends Error {
     payload: {
       error: string;
       message: string;
+      [key: string]: any;
     };
   };
 }
@@ -34,15 +35,36 @@ export function errorHandler(err: ApiError, req: Request, res: Response, next: N
     return;
   }
 
+  // SafeModeError mapping to 429/422
+  if (err.name === 'SafeModeError') {
+    const code = (err as any).code;
+    const httpStatus = (code === 'F13' || code === 'F15') ? 422 : 429;
+    res.status(httpStatus).json({
+      success: false,
+      error: 'SafeModeError',
+      code: code,
+      message: (err as any).detail || err.message,
+    });
+    return;
+  }
+
   // Boom HTTP errors (structured)
   if (err.isBoom && err.output) {
     const { statusCode, payload } = err.output;
     logger.warn('HTTP error', { statusCode, message: payload.message, path: req.path });
-    res.status(statusCode).json({
+    
+    // Construct response, including any custom payload fields like 'code'
+    const responsePayload: any = {
       success: false,
       error: payload.error,
       message: payload.message,
-    });
+    };
+    
+    if (payload.code) {
+      responsePayload.code = payload.code;
+    }
+
+    res.status(statusCode).json(responsePayload);
     return;
   }
 

@@ -31,7 +31,7 @@ import tabdealRoutes from './routes/tabdeal.routes';
 import { initCampaignScheduler } from './services/campaignScheduler';
 import { initClientCleanupWorker } from './workers/clientCleanupWorker';
 import { normalizeExistingDatabase } from './utils/jid';
-import { createSafeModeRouter, safeModeErrorHandler } from './safemode';
+import { createSafeModeRouter } from './safemode';
 import { getSafeModeManager } from './config/safemode';
 
 import { env } from './config/env';
@@ -283,7 +283,7 @@ export function createApp(): express.Application {
   );
 
   // SafeModeError handler must come before the generic errorHandler
-  app.use(safeModeErrorHandler());
+  // app.use(safeModeErrorHandler()); // Moved to unified errorHandler
 
   app.use(
     errorHandler
