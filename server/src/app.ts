@@ -28,6 +28,7 @@ import analyticsRoutes from './routes/analytics.routes';
 import reminderRoutes from './routes/reminder.routes';
 import notificationEventRoutes from './routes/notification-event.routes';
 import tabdealRoutes from './routes/tabdeal.routes';
+import clientTemplateRoutes from './routes/client-template.routes';
 
 import { initCampaignScheduler } from './services/campaignScheduler';
 import { initClientCleanupWorker } from './workers/clientCleanupWorker';

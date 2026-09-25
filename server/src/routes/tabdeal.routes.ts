@@ -60,8 +60,15 @@ router.patch('/templates/:id/status', validate(templateController.updateTemplate
 router.delete('/templates/:id', templateController.deleteTemplate);
 
 import * as logController from '../controllers/tabdeal/log.controller';
+import * as clientTemplateController from '../controllers/tabdeal/client-template.controller';
 
-// ... other routes ...
+// Client Templates
+router.get('/client-templates', clientTemplateController.getClientTemplates);
+router.post('/client-templates', validate(clientTemplateController.createClientTemplateSchema), clientTemplateController.createClientTemplate);
+router.patch('/client-templates/:id', validate(clientTemplateController.updateClientTemplateSchema), clientTemplateController.updateClientTemplate);
+
+// API Keys (Superadmin visibility)
+router.get('/clients/:clientId/api-keys', clientTemplateController.getClientApiKeys);
 
 // Dashboard Metrics
 router.get('/dashboard-metrics', logController.getDashboardMetrics);
