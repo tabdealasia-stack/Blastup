@@ -1,83 +1,57 @@
 ﻿import Link from 'next/link';
-import { ExternalLink, Github } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer style={{
-      borderTop: '1px solid #f1f5f9',
-      paddingTop: 48,
-      paddingBottom: 40,
-      background: '#ffffff',
-    }}>
-      <div style={{
-        maxWidth: 1040,
-        margin: '0 auto',
-        paddingLeft: 24,
-        paddingRight: 24,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 32,
-      }}>
-        {/* Main Footer Links */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 20,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.svg" alt="Blastup" style={{ height: 24, objectFit: 'contain' }} onError={(e) => (e.currentTarget.style.display = 'none')} />
-            <span style={{ fontSize: 13, color: '#64748b' }}>
-              Open-Source WhatsApp Platform
-            </span>
+    <footer className="bg-gray-50 border-t border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
+          <div className="md:col-span-1">
+            <Link href="/" className="flex flex-col mb-4">
+              <span className="text-xl font-bold tracking-tight text-gray-900">BLASTUP</span>
+              <span className="text-[10px] font-bold text-indigo-600 tracking-widest uppercase mt-0.5">
+                BY TABDEAL
+              </span>
+            </Link>
+            <p className="text-sm text-gray-500 leading-relaxed max-w-xs">
+              Professional B2B WhatsApp transactional notification and automation platform for developers and businesses.
+            </p>
+          </div>
+          
+          <div>
+            <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Product</h4>
+            <ul className="space-y-3">
+              <li><Link href="/#features" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">Features</Link></li>
+              <li><Link href="/#how-it-works" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">How It Works</Link></li>
+              <li><Link href="/#security" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">Security</Link></li>
+              <li><Link href="/#pricing" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">Pricing</Link></li>
+            </ul>
           </div>
 
-          <div style={{ display: 'flex', gap: 20, fontSize: 13, alignItems: 'center', flexWrap: 'wrap' }}>
-            <Link href="/#features" style={{ color: '#64748b', textDecoration: 'none' }}>Features</Link>
-            <Link href="/chatbot" style={{ color: '#64748b', textDecoration: 'none' }}>Chatbot</Link>
-            <Link href="/deploy" style={{ color: '#64748b', textDecoration: 'none' }}>Deploy</Link>
-            <Link href="/about" style={{ color: '#64748b', textDecoration: 'none' }}>About</Link>
-            <Link href="/docs" style={{ color: '#64748b', textDecoration: 'none' }}>API Docs</Link>
-            <a
-              href="https://github.com/kalpintelligence/blastup"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: '#64748b', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
-            >
-              <Github size={13} /> GitHub
-            </a>
+          <div>
+            <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Developers</h4>
+            <ul className="space-y-3">
+              <li><Link href="/#api" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">API Overview</Link></li>
+              <li><Link href="/dashboard/integration" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">Integration Guide</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Platform</h4>
+            <ul className="space-y-3">
+              <li><Link href="/login" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">Login</Link></li>
+              <li><Link href="/dashboard" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">Client Portal</Link></li>
+              <li><a href="mailto:contact@tabdeal.com" className="text-sm text-gray-600 hover:text-indigo-600 transition-colors">Contact Us</a></li>
+            </ul>
           </div>
         </div>
-
-        {/* Bottom Attribution */}
-        <div style={{
-          borderTop: '1px solid #f8fafc',
-          paddingTop: 20,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 12,
-          fontSize: 12,
-          color: '#94a3b8',
-        }}>
-          <div>
-            Â© 2026 Blastup. MIT License.
-          </div>
-
-          {/* NON-EDITABLE BRANDING */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span>Developed by</span>
-            <a
-              href="https://kalpintelligence.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: '#16a34a', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 3 }}
-            >
-              Kalp Intelligence <ExternalLink size={10} />
-            </a>
+        
+        <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-gray-500">
+            &copy; {new Date().getFullYear()} Tabdeal. All rights reserved.
+          </p>
+          <div className="text-sm text-gray-500 flex space-x-4">
+            <span>Privacy Policy</span>
+            <span>Terms of Service</span>
           </div>
         </div>
       </div>

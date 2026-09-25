@@ -1,620 +1,311 @@
-'use client';
-
-import { useState } from 'react';
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
-import { ArrowRight, ChevronDown, Check, Terminal, ExternalLink, Github } from 'lucide-react';
+import { ArrowRight, Server, ShieldCheck, Zap, Code, LayoutDashboard, Database, Webhook, Key, Lock, CheckCircle2, Building, ShoppingBag, Utensils, Plane } from 'lucide-react';
+import { Metadata } from 'next';
 
-const coreFeatures = [
-  {
-    title: 'Unlimited Campaigns',
-    subtitle: 'Broadcast without per-message fees',
-    description: 'Send bulk updates, announcements, and product carousels to your entire contact list. Connects directly to WhatsApp web sockets with zero per-conversation Meta charges.',
-  },
-  {
-    title: 'Visual Flow Chatbot',
-    subtitle: 'Automate replies and capture leads 24/7',
-    description: 'Design conversational journeys with reply buttons, keyword matching, and lead forms in a visual builder. Test flows in real-time with the built-in mobile simulator.',
-  },
-  {
-    title: 'Anti-Ban Protection',
-    subtitle: 'SafeMode delay pacing and warmup',
-    description: 'Intelligent randomized delays, batch segmentation, and warmup routines ensure your numbers stay safe and behave naturally.',
-  },
-];
+export const metadata: Metadata = {
+  title: 'TABDEAL BLASTUP | WhatsApp Transactional Notifications',
+  description: 'A professional B2B WhatsApp transactional notification and automation platform. Secure, reliable API integration for developers and businesses.',
+};
 
-const steps = [
-  {
-    step: '01',
-    title: 'Connect WhatsApp',
-    description: 'Scan a QR code from your phone using WhatsApp Multi-Device. No Meta approval delays or business verification needed.',
-  },
-  {
-    step: '02',
-    title: 'Set up flow or campaign',
-    description: 'Import your contacts via CSV, segment by groups, or build an interactive chatbot flow with custom trigger keywords.',
-  },
-  {
-    step: '03',
-    title: 'Launch and track',
-    description: 'Send broadcasts with automatic delay throttling. Monitor delivery, read receipts, and replies in real time.',
-  },
-];
-
-const comparison = [
-  { feature: 'Cost per 100k messages', blastup: '$0 (Free forever)', cloudApi: '$500 – $1,200 / mo' },
-  { feature: 'Template approval wait', blastup: 'None (Instant)', cloudApi: '24–48 hours' },
-  { feature: 'Hosting & privacy', blastup: 'Self-hosted on your server', cloudApi: 'Third-party cloud' },
-  { feature: 'No-code chatbot', blastup: 'Included', cloudApi: 'Paid add-on' },
-  { feature: 'License', blastup: 'MIT Open Source', cloudApi: 'Proprietary' },
-];
-
-const faqs = [
-  {
-    q: 'Is Blastup genuinely free?',
-    a: 'Yes. Blastup is released under the MIT Open Source License. You can run it on your own server or VPS at zero software cost. There are no monthly subscriptions and no paywalls.',
-  },
-  {
-    q: 'How does it connect to WhatsApp?',
-    a: 'Blastup uses the Baileys multi-device protocol. You link your phone by scanning a QR code once, exactly like WhatsApp Web. It runs standalone on your server without requiring Meta Cloud API verification.',
-  },
-  {
-    q: 'Will my WhatsApp number get blocked?',
-    a: 'Blastup includes a built-in SafeMode engine that paces message delivery with randomized delays, rotates message templates, and manages hourly volume limits to protect your account.',
-  },
-  {
-    q: 'What are the server requirements to self-host?',
-    a: 'A simple $5–$10/mo VPS (e.g. 1 vCPU, 2GB RAM on Hetzner, DigitalOcean, or AWS) running Docker and Docker Compose is more than enough for thousands of daily messages.',
-  },
-  {
-    q: 'Can I integrate with my existing backend or CRM?',
-    a: 'Yes. Blastup provides a complete REST API with API keys. You can trigger OTPs, order updates, and custom notifications via simple HTTP POST requests.',
-  },
-];
-
-export default function LandingPage() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [copiedCode, setCopiedCode] = useState(false);
-
-  const copyDockerCommand = () => {
-    navigator.clipboard.writeText('git clone https://github.com/kalpintelligence/blastup.git\ncd blastup\ndocker compose up -d');
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
-
+export default function Home() {
   return (
-    <div style={{
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif",
-      background: '#FFFFFF',
-      color: '#0F172A',
-      minHeight: '100vh',
-      WebkitFontSmoothing: 'antialiased',
-    }}>
-      <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        .hero-btn-primary {
-          background: #0F172A;
-          color: #ffffff;
-          border-radius: 8px;
-          padding: 10px 20px;
-          font-weight: 500;
-          font-size: 14px;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          text-decoration: none;
-          transition: all 0.15s ease;
-        }
-        .hero-btn-primary:hover {
-          background: #1e293b;
-        }
+    <div className="min-h-screen bg-white selection:bg-indigo-100 selection:text-indigo-900 font-sans text-gray-900">
+      {/* Schema Markup for SoftwareApplication / WebSite */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "TABDEAL BLASTUP",
+            "applicationCategory": "BusinessApplication",
+            "description": "Professional B2B WhatsApp transactional notification and automation platform.",
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          })
+        }}
+      />
 
-        .hero-btn-secondary {
-          background: #f8fafc;
-          color: #334155;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          padding: 10px 18px;
-          font-weight: 500;
-          font-size: 14px;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          text-decoration: none;
-          transition: all 0.15s ease;
-        }
-        .hero-btn-secondary:hover {
-          background: #f1f5f9;
-          color: #0f172a;
-        }
-
-        .dash-container {
-          border-radius: 12px;
-          border: 1px solid #e2e8f0;
-          box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.07);
-          overflow: hidden;
-          background: #ffffff;
-        }
-
-        .card-minimal {
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 28px;
-          background: #ffffff;
-          transition: border-color 0.2s ease;
-        }
-        .card-minimal:hover {
-          border-color: #cbd5e1;
-        }
-      `}</style>
-
-      {/* Shared Navbar */}
       <Navbar />
 
-      {/* ── HERO ── */}
-      <section style={{
-        maxWidth: 1040,
-        margin: '0 auto',
-        paddingTop: 130,
-        paddingBottom: 60,
-        paddingLeft: 24,
-        paddingRight: 24,
-      }}>
-        <div style={{ maxWidth: 680, marginBottom: 40 }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 12,
-            fontWeight: 600,
-            color: '#16a34a',
-            marginBottom: 16,
-            letterSpacing: '0.02em',
-          }}>
-            <span>●</span> Open Source WhatsApp Platform
-          </div>
-
-          <h1 style={{
-            fontSize: 'clamp(32px, 5vw, 48px)',
-            fontWeight: 700,
-            lineHeight: 1.15,
-            letterSpacing: '-0.03em',
-            color: '#0f172a',
-            marginBottom: 16,
-          }}>
-            Broadcast campaigns and build chatbots on WhatsApp. Free &amp; self-hosted.
-          </h1>
-
-          <p style={{
-            fontSize: 16,
-            color: '#475569',
-            lineHeight: 1.6,
-            marginBottom: 28,
-            maxWidth: 580,
-          }}>
-            Blastup gives you unlimited WhatsApp broadcasts, no-code chatflows, and anti-ban protection without Meta per-message fees.
-          </p>
-
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Link href="/dashboard" className="hero-btn-primary">
-              Open Dashboard <ArrowRight size={14} />
-            </Link>
-            <Link href="/chatbot" className="hero-btn-secondary">
-              Try Chatbot
-            </Link>
-            <Link href="/deploy" className="hero-btn-secondary">
-              Deploy Guide
-            </Link>
-          </div>
-        </div>
-
-        {/* ── DASHBOARD SHOWCASE ── */}
-        <div className="dash-container">
-          <div style={{
-            height: 36,
-            background: '#f8fafc',
-            borderBottom: '1px solid #e2e8f0',
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 14px',
-            gap: 6,
-          }}>
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#e2e8f0' }} />
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#e2e8f0' }} />
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#e2e8f0' }} />
-            <div style={{ marginLeft: 8, fontSize: 12, color: '#64748b', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ color: '#16a34a', fontSize: 11 }}>🔒</span> wa.kalp.ltd/dashboard
-            </div>
-          </div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/dashboard.png"
-            alt="Blastup Dashboard — wa.kalp.ltd"
-            style={{ width: '100%', height: 'auto', display: 'block' }}
-          />
-        </div>
-      </section>
-
-      {/* ── 3 CORE FEATURES ── */}
-      <section id="features" style={{
-        maxWidth: 1040,
-        margin: '0 auto',
-        padding: '60px 24px',
-        borderTop: '1px solid #f1f5f9',
-      }}>
-        <div style={{ marginBottom: 36 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', color: '#0f172a' }}>
-            Core capabilities
-          </h2>
-          <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
-            Built for developers, marketers, and businesses who want direct control over their WhatsApp communication.
-          </p>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: 20,
-        }}>
-          {coreFeatures.map((item) => (
-            <div key={item.title} className="card-minimal">
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
-                {item.title}
-              </div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#16a34a', marginBottom: 12 }}>
-                {item.subtitle}
-              </div>
-              <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6 }}>
-                {item.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── NO-CODE CHATBOT FEATURE SPOTLIGHT ── */}
-      <section style={{
-        maxWidth: 1040,
-        margin: '0 auto',
-        padding: '60px 24px',
-        borderTop: '1px solid #f1f5f9',
-      }}>
-        <div style={{
-          border: '1px solid #e2e8f0',
-          borderRadius: 16,
-          padding: '36px 32px',
-          background: '#fafaf9',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: 32,
-          alignItems: 'center',
-        }}>
-          <div>
-            <div style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: '#16a34a',
-              marginBottom: 10,
-              letterSpacing: '0.02em',
-            }}>
-              ● NO-CODE VISUAL CHATBOT
-            </div>
-            <h2 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', letterSpacing: '-0.02em', marginBottom: 12 }}>
-              Build automated conversational flows in minutes
-            </h2>
-            <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.6, marginBottom: 20 }}>
-              The <strong>No-Code Chatbot Flow Engine</strong> allows you to visually connect welcome triggers, interactive button menus, catalog drops, order lookups, and human agent interventions without writing a line of code.
+      <main>
+        {/* HERO SECTION */}
+        <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden border-b border-gray-100 bg-gray-50/30">
+          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-50/50 via-white to-white"></div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-900 mb-6 max-w-4xl mx-auto leading-tight">
+              Transactional WhatsApp notifications & business automation
+            </h1>
+            <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+              Connect your websites, applications, and backend systems to trigger approved notification templates through a centralized, reliable API platform.
             </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: '#334155' }}>
-                <span style={{ color: '#16a34a', fontWeight: 700 }}>✓</span>
-                <span><strong>Keyword Triggers:</strong> Automatically trigger replies when customers say &quot;Hi&quot;, &quot;Order&quot;, &quot;Pricing&quot;, or &quot;Help&quot;.</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: '#334155' }}>
-                <span style={{ color: '#16a34a', fontWeight: 700 }}>✓</span>
-                <span><strong>Interactive Buttons:</strong> Native 1-tap WhatsApp reply buttons that drive instant click-through rates.</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: '#334155' }}>
-                <span style={{ color: '#16a34a', fontWeight: 700 }}>✓</span>
-                <span><strong>Live Phone Simulator:</strong> Test the full conversational experience before deploying to your WhatsApp number.</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <Link href="/chatbot/no-code" className="hero-btn-primary">
-                Open No-Code Chatbot <ArrowRight size={14} />
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+              <Link href="/dashboard" className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-white bg-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 hover:shadow-md transition-all">
+                Get Started <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
-              <Link href="/chatbot" className="hero-btn-secondary">
-                Chatbot Settings
+              <Link href="#features" className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 hover:text-gray-900 transition-all">
+                Explore Platform
               </Link>
             </div>
-          </div>
-
-          {/* Minimal Flow Preview Card */}
-          <div style={{
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderRadius: 12,
-            padding: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 12,
-          }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', borderBottom: '1px solid #f1f5f9', paddingBottom: 10 }}>
-              Live Journey Preview
-            </div>
-
-            {/* Node 1 */}
-            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#16a34a' }}>01 / Trigger</div>
-              <div style={{ fontSize: 12, color: '#0f172a', fontWeight: 500, marginTop: 2 }}>Keyword: &quot;Hi&quot; or &quot;Urban Studioz&quot;</div>
-            </div>
-
-            {/* Node 2 */}
-            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '10px 12px' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#16a34a' }}>02 / Media + Buttons</div>
-              <div style={{ fontSize: 12, color: '#0f172a', marginTop: 2 }}>&quot;Welcome to Urban Studioz 👋 How can we help?&quot;</div>
-              <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 11, padding: '3px 8px', background: '#ffffff', border: '1px solid #86efac', borderRadius: 4, color: '#16a34a', fontWeight: 600 }}>🛍️ Shop Now</span>
-                <span style={{ fontSize: 11, padding: '3px 8px', background: '#ffffff', border: '1px solid #86efac', borderRadius: 4, color: '#16a34a', fontWeight: 600 }}>📦 Track Order</span>
-                <span style={{ fontSize: 11, padding: '3px 8px', background: '#ffffff', border: '1px solid #86efac', borderRadius: 4, color: '#16a34a', fontWeight: 600 }}>💬 Live Agent</span>
+            
+            {/* Conceptual Dashboard Graphic */}
+            <div className="mt-20 max-w-5xl mx-auto relative rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden hidden sm:block">
+              <div className="h-10 bg-gray-50 border-b border-gray-200 flex items-center px-4">
+                <div className="flex space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-rose-400"></div>
+                  <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+                  <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+                </div>
               </div>
-            </div>
-
-            {/* Node 3 */}
-            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#2563eb' }}>03 / Action &amp; Routing</div>
-              <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>Instant order lookup or human specialist takeover</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS (3 STEPS) ── */}
-      <section style={{
-        maxWidth: 1040,
-        margin: '0 auto',
-        padding: '60px 24px',
-        borderTop: '1px solid #f1f5f9',
-      }}>
-        <div style={{ marginBottom: 36 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', color: '#0f172a' }}>
-            How it works
-          </h2>
-          <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
-            Get started in minutes without waiting for Meta API approvals.
-          </p>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: 20,
-        }}>
-          {steps.map((s) => (
-            <div key={s.step} style={{ padding: '8px 0' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', marginBottom: 8, fontFamily: 'monospace' }}>
-                {s.step}
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 600, color: '#0f172a', marginBottom: 8 }}>
-                {s.title}
-              </h3>
-              <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6 }}>
-                {s.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── SELF-HOST / TERMINAL BOX ── */}
-      <section style={{
-        maxWidth: 1040,
-        margin: '0 auto',
-        padding: '60px 24px',
-        borderTop: '1px solid #f1f5f9',
-      }}>
-        <div style={{
-          background: '#0F172A',
-          borderRadius: 12,
-          padding: '32px 28px',
-          color: '#ffffff',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 24,
-        }}>
-          <div style={{ maxWidth: 440 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#4ade80', marginBottom: 6 }}>
-              Quick Self-Host
-            </div>
-            <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, letterSpacing: '-0.02em' }}>
-              Run with Docker in under a minute
-            </h3>
-            <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>
-              Clone the repository and spin up both the client, server, and MongoDB instances using Docker Compose.
-            </p>
-          </div>
-
-          <div style={{
-            background: '#020617',
-            borderRadius: 8,
-            padding: '16px 20px',
-            border: '1px solid #1e293b',
-            fontFamily: 'monospace',
-            fontSize: 12,
-            color: '#e2e8f0',
-            position: 'relative',
-            minWidth: 280,
-          }}>
-            <div style={{ color: '#64748b', marginBottom: 4 }}># Clone and start</div>
-            <div>git clone https://github.com/kalpintelligence/blastup.git</div>
-            <div>cd blastup</div>
-            <div style={{ color: '#4ade80' }}>docker compose up -d</div>
-
-            <button
-              onClick={copyDockerCommand}
-              style={{
-                marginTop: 12,
-                background: '#1e293b',
-                color: '#f8fafc',
-                border: 'none',
-                borderRadius: 6,
-                padding: '5px 10px',
-                fontSize: 11,
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
-            >
-              {copiedCode ? '✓ Copied' : 'Copy commands'}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SIMPLE COMPARISON TABLE ── */}
-      <section style={{
-        maxWidth: 1040,
-        margin: '0 auto',
-        padding: '60px 24px',
-        borderTop: '1px solid #f1f5f9',
-      }}>
-        <div style={{ marginBottom: 28 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', color: '#0f172a' }}>
-            Blastup vs Meta Cloud API
-          </h2>
-        </div>
-
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, textAlign: 'left' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b' }}>
-                <th style={{ padding: '12px 14px', fontWeight: 600 }}>Feature</th>
-                <th style={{ padding: '12px 14px', fontWeight: 600, color: '#16a34a' }}>Blastup</th>
-                <th style={{ padding: '12px 14px', fontWeight: 600 }}>Meta Cloud API</th>
-              </tr>
-            </thead>
-            <tbody>
-              {comparison.map((row) => (
-                <tr key={row.feature} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '12px 14px', fontWeight: 500, color: '#0f172a' }}>{row.feature}</td>
-                  <td style={{ padding: '12px 14px', fontWeight: 600, color: '#16a34a' }}>{row.blastup}</td>
-                  <td style={{ padding: '12px 14px', color: '#64748b' }}>{row.cloudApi}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* ── FAQ ── */}
-      <section id="faq" style={{
-        maxWidth: 1040,
-        margin: '0 auto',
-        padding: '60px 24px',
-        borderTop: '1px solid #f1f5f9',
-      }}>
-        <div style={{ marginBottom: 28 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', color: '#0f172a' }}>
-            Questions &amp; answers
-          </h2>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {faqs.map((faq, idx) => {
-            const isOpen = openFaq === idx;
-            return (
-              <div
-                key={faq.q}
-                style={{
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 8,
-                  overflow: 'hidden',
-                }}
-              >
-                <button
-                  onClick={() => setOpenFaq(isOpen ? null : idx)}
-                  style={{
-                    width: '100%',
-                    padding: '14px 18px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    background: '#ffffff',
-                    border: 'none',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: '#0f172a',
-                  }}
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    size={16}
-                    style={{
-                      transform: isOpen ? 'rotate(180deg)' : 'none',
-                      transition: 'transform 0.15s ease',
-                      color: '#64748b',
-                    }}
-                  />
-                </button>
-
-                {isOpen && (
-                  <div style={{ padding: '0 18px 16px', fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
-                    {faq.a}
+              <div className="p-8 grid grid-cols-3 gap-6 text-left">
+                <div className="col-span-1 border-r border-gray-100 pr-6 space-y-6">
+                  <div className="h-6 w-32 bg-gray-100 rounded"></div>
+                  <div className="h-4 w-full bg-gray-50 rounded"></div>
+                  <div className="h-4 w-5/6 bg-gray-50 rounded"></div>
+                  <div className="h-4 w-4/6 bg-gray-50 rounded"></div>
+                </div>
+                <div className="col-span-2 space-y-6">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="h-24 bg-indigo-50/50 rounded-xl border border-indigo-100"></div>
+                    <div className="h-24 bg-gray-50 rounded-xl border border-gray-100"></div>
+                    <div className="h-24 bg-gray-50 rounded-xl border border-gray-100"></div>
                   </div>
-                )}
+                  <div className="h-48 bg-gray-50 rounded-xl border border-gray-100 w-full"></div>
+                </div>
               </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ── MINIMAL CTA ── */}
-      <section style={{
-        maxWidth: 1040,
-        margin: '0 auto',
-        padding: '60px 24px 80px',
-        borderTop: '1px solid #f1f5f9',
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 20,
-        }}>
-          <div>
-            <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', letterSpacing: '-0.02em' }}>
-              Ready to send your first campaign?
-            </h3>
-            <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
-              Open the dashboard or deploy Blastup on your own server.
-            </p>
+            </div>
           </div>
+        </section>
 
-          <div style={{ display: 'flex', gap: 10 }}>
-            <Link href="/dashboard" className="hero-btn-primary">
-              Launch Dashboard
-            </Link>
-            <a
-              href="https://github.com/kalpintelligence/blastup"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hero-btn-secondary"
-            >
-              <Github size={14} /> Star on GitHub
+        {/* HOW IT WORKS SECTION */}
+        <section id="how-it-works" className="py-24 bg-white border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-4">How it works</h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-16">
+              A robust, asynchronous architecture designed for reliability and scale.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+              <div className="p-6 bg-gray-50 rounded-xl border border-gray-100">
+                <Server className="w-8 h-8 text-indigo-600 mx-auto mb-3" />
+                <h4 className="font-semibold text-gray-900 text-sm">Your App</h4>
+              </div>
+              <div className="hidden md:flex justify-center text-gray-300"><ArrowRight className="w-6 h-6" /></div>
+              <div className="p-6 bg-gray-50 rounded-xl border border-gray-100 relative shadow-sm ring-1 ring-indigo-500/20">
+                <Webhook className="w-8 h-8 text-indigo-600 mx-auto mb-3" />
+                <h4 className="font-semibold text-gray-900 text-sm">Blastup API</h4>
+              </div>
+              <div className="hidden md:flex justify-center text-gray-300"><ArrowRight className="w-6 h-6" /></div>
+              <div className="p-6 bg-gray-50 rounded-xl border border-gray-100">
+                <Database className="w-8 h-8 text-indigo-600 mx-auto mb-3" />
+                <h4 className="font-semibold text-gray-900 text-sm">Queue & Log</h4>
+              </div>
+            </div>
+            
+            <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8 text-left max-w-4xl mx-auto">
+              <div>
+                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-600 mb-4">1</div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Authentication</h4>
+                <p className="text-sm text-gray-500">Secure API-key based validation scoped specifically to your isolated tenant environment.</p>
+              </div>
+              <div>
+                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-600 mb-4">2</div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Event Processing</h4>
+                <p className="text-sm text-gray-500">Idempotent payload processing mapping events against authorized notification templates.</p>
+              </div>
+              <div>
+                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-600 mb-4">3</div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Safe Dispatch</h4>
+                <p className="text-sm text-gray-500">Durable outbox workers securely dispatch messages to the self-hosted WhatsApp engine.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FEATURES SECTION */}
+        <section id="features" className="py-24 bg-gray-50/50 border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-4">Professional Platform Capabilities</h2>
+              <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+                Built from the ground up for stability, observability, and tenant security.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                { title: 'API Authentication', desc: 'Secure hashed API keys scoped individually per client.', icon: Key },
+                { title: 'Template Validation', desc: 'Strictly enforce notification structures using master templates.', icon: ShieldCheck },
+                { title: 'Idempotent Delivery', desc: 'Prevent duplicate notifications with native event deduplication.', icon: Zap },
+                { title: 'Durable Outbox', desc: 'Background worker queues ensuring resilient message delivery.', icon: Database },
+                { title: 'SafeMode Processing', desc: 'Circuit breakers prevent infinite retries and API exhaustion.', icon: Lock },
+                { title: 'Centralized Admin', desc: 'Manage tenants, categories, and catalogs from a single view.', icon: LayoutDashboard },
+              ].map((feat, i) => (
+                <div key={i} className="p-6 bg-white rounded-xl border border-gray-200/60 shadow-sm hover:shadow-md transition-shadow">
+                  <feat.icon className="w-6 h-6 text-indigo-600 mb-4" />
+                  <h3 className="text-base font-bold text-gray-900 mb-2">{feat.title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{feat.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* USE CASES SECTION */}
+        <section id="use-cases" className="py-24 bg-white border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-4 text-center">Business Use Cases</h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-16 text-center">
+              Automate the exact notifications your business relies on.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="p-6 bg-gray-50 rounded-xl border border-gray-100">
+                <ShoppingBag className="w-8 h-8 text-indigo-600 mb-4" />
+                <h3 className="text-lg font-bold text-gray-900 mb-4">E-commerce</h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center"><CheckCircle2 className="w-4 h-4 text-green-500 mr-2" /> Order confirmations</li>
+                  <li className="flex items-center"><CheckCircle2 className="w-4 h-4 text-green-500 mr-2" /> Payment receipts</li>
+                  <li className="flex items-center"><CheckCircle2 className="w-4 h-4 text-green-500 mr-2" /> Shipping updates</li>
+                </ul>
+              </div>
+              <div className="p-6 bg-gray-50 rounded-xl border border-gray-100">
+                <Building className="w-8 h-8 text-indigo-600 mb-4" />
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Clinics</h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center"><CheckCircle2 className="w-4 h-4 text-green-500 mr-2" /> Appointments</li>
+                  <li className="flex items-center"><CheckCircle2 className="w-4 h-4 text-green-500 mr-2" /> Patient follow-ups</li>
+                  <li className="flex items-center"><CheckCircle2 className="w-4 h-4 text-green-500 mr-2" /> Medical reminders</li>
+                </ul>
+              </div>
+              <div className="p-6 bg-gray-50 rounded-xl border border-gray-100">
+                <Utensils className="w-8 h-8 text-indigo-600 mb-4" />
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Restaurants</h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center"><CheckCircle2 className="w-4 h-4 text-green-500 mr-2" /> Table reservations</li>
+                  <li className="flex items-center"><CheckCircle2 className="w-4 h-4 text-green-500 mr-2" /> Order updates</li>
+                  <li className="flex items-center"><CheckCircle2 className="w-4 h-4 text-green-500 mr-2" /> Service confirmations</li>
+                </ul>
+              </div>
+              <div className="p-6 bg-gray-50 rounded-xl border border-gray-100">
+                <Plane className="w-8 h-8 text-indigo-600 mb-4" />
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Travel & Tours</h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center"><CheckCircle2 className="w-4 h-4 text-green-500 mr-2" /> Booking confirmations</li>
+                  <li className="flex items-center"><CheckCircle2 className="w-4 h-4 text-green-500 mr-2" /> Itinerary updates</li>
+                  <li className="flex items-center"><CheckCircle2 className="w-4 h-4 text-green-500 mr-2" /> Emergency alerts</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* API / DEVELOPER SECTION */}
+        <section id="api" className="py-24 bg-gray-900 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <Code className="w-10 h-10 text-indigo-400 mb-6" />
+                <h2 className="text-3xl font-bold tracking-tight mb-4">Integration-Ready API</h2>
+                <p className="text-lg text-gray-400 mb-8 leading-relaxed">
+                  Connect your existing CRM, ERP, or custom backend to our transactional endpoint. Submit structured events and let our Outbox processor handle the delivery.
+                </p>
+                <Link href="/dashboard/integration" className="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-gray-900 bg-white rounded-lg hover:bg-gray-100 transition-colors">
+                  View Integration Guide
+                </Link>
+              </div>
+              
+              <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-2xl font-mono text-sm overflow-x-auto">
+                <div className="flex space-x-2 mb-4">
+                  <div className="w-3 h-3 rounded-full bg-rose-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                </div>
+                <pre className="text-gray-300">
+<span className="text-rose-400">POST</span> /api/notifications/event
+<span className="text-gray-500">Host:</span> api.tabdeal.com
+<span className="text-gray-500">Authorization:</span> Bearer YOUR_API_KEY
+<span className="text-gray-500">Content-Type:</span> application/json
+
+{`{
+  "eventId": "ORDER_12345",
+  "templateSlug": "order_confirmation",
+  "recipient": "CUSTOMER_NUMBER",
+  "variables": {
+    "customerName": "John Doe",
+    "orderTotal": "$49.99"
+  }
+}`}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECURITY & RELIABILITY */}
+        <section id="security" className="py-24 bg-white border-b border-gray-100">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <ShieldCheck className="w-12 h-12 text-indigo-600 mx-auto mb-6" />
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-6">Security & Reliability</h2>
+            <p className="text-lg text-gray-600 mb-10 leading-relaxed">
+              Blastup enforces strict tenant isolation, server-side authorization, and hashed API-key storage. The architectural design guarantees idempotent event handling and durable processing to prevent data loss.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm font-medium text-gray-700">
+              <div className="p-4 bg-gray-50 rounded-lg">Tenant Isolation</div>
+              <div className="p-4 bg-gray-50 rounded-lg">Hashed API Keys</div>
+              <div className="p-4 bg-gray-50 rounded-lg">Idempotent Events</div>
+              <div className="p-4 bg-gray-50 rounded-lg">Operational Logging</div>
+            </div>
+          </div>
+        </section>
+
+        {/* PRICING / CONTACT */}
+        <section id="pricing" className="py-24 bg-indigo-600 text-white text-center">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold tracking-tight mb-6">Ready to scale your notifications?</h2>
+            <p className="text-lg text-indigo-100 mb-10">
+              Discuss integration architecture, pricing models, and how Blastup can automate your specific business workflows.
+            </p>
+            <a href="mailto:contact@tabdeal.com" className="inline-flex items-center justify-center px-8 py-3.5 text-base font-bold text-indigo-600 bg-white rounded-lg shadow-lg hover:bg-gray-50 transition-colors">
+              Request a Demo
             </a>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Shared Footer */}
+        {/* FAQ */}
+        <section id="faq" className="py-24 bg-white border-b border-gray-100">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-12 text-center">Frequently Asked Questions</h2>
+            
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">What is Blastup?</h3>
+                <p className="text-gray-600">Blastup is a professional B2B transactional notification engine that allows businesses to trigger WhatsApp messages securely from their own applications.</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Is this the official Meta WhatsApp Business API?</h3>
+                <p className="text-gray-600">No. Blastup currently utilizes a self-hosted WhatsApp Web/Baileys-based architecture to provide cost-effective and robust transactional deliveries.</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">How does integration work?</h3>
+                <p className="text-gray-600">You generate an API key in the Client Portal and perform HTTP POST requests from your application containing your predefined payload. Blastup handles the delivery asynchronously.</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Are notifications template based?</h3>
+                <p className="text-gray-600">Yes. To maintain platform integrity and prevent spam, all events must map strictly to templates approved and assigned by Superadmin configuration.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+      
       <Footer />
     </div>
   );

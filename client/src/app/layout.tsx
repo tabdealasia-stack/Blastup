@@ -1,12 +1,17 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
 import '@/styles/globals.css';
 import { SWRProvider } from '@/providers/SWRProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
-  title: 'Blastup - WhatsApp Automation Platform',
-  description: 'Production-ready WhatsApp Automation & Broadcasting Platform',
+  title: 'TABDEAL BLASTUP | WhatsApp Transactional Notifications & Business Automation Platform',
+  description: 'Professional B2B WhatsApp transactional notification and automation platform for developers and businesses. Self-hosted reliable API.',
+  openGraph: {
+    title: 'TABDEAL BLASTUP | WhatsApp Transactional Notifications',
+    description: 'Professional B2B WhatsApp transactional notification and automation platform.',
+    type: 'website',
+  },
   icons: {
     icon: '/favicon.png',
     shortcut: '/favicon.png',
@@ -20,16 +25,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="robots" content="noindex, nofollow" />
         <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Vollkorn:ital,wght@0,400..900;1,400..900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body>
+      <body className="font-sans antialiased text-gray-900 bg-white">
         <SWRProvider>
           <AuthProvider>
             {children}
