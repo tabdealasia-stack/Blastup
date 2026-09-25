@@ -125,8 +125,8 @@ export class SafeModeManager {
 
     // ── Sending window check (F14) ──────────────────────────────────────
     const istHour = Number(new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(new Date()));
-    const istWindowStart = 9;
-    const istWindowEnd = 21;
+    const istWindowStart = 0;
+    const istWindowEnd = 24;
     if (istHour < istWindowStart || istHour >= istWindowEnd) {
       throw new SafeModeError(
         'F14',
@@ -270,4 +270,5 @@ export class SafeModeManager {
     await this.advanceTierIfEligible(phoneId);
   }
 }
+
 
