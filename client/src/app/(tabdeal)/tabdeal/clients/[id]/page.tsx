@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ErrorState } from '@/components/ui/States';
 import { tabdealApi } from '@/lib/api';
+import { ClientWhatsAppSection } from './ClientWhatsAppSection';
 
 export default function ClientDetailPage() {
   const params = useParams();
@@ -75,32 +76,7 @@ export default function ClientDetailPage() {
           </dl>
         </Card>
 
-        {/* D. WhatsApp Summary */}
-        <Card className="p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 border-b pb-2">WhatsApp Integration</h3>
-          {!client.whatsapp ? (
-            <p className="text-sm text-gray-500 italic">No WhatsApp account paired.</p>
-          ) : (
-            <dl className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <dt className="text-sm font-medium text-gray-500">Status</dt>
-                <dd className="mt-1">
-                  <Badge variant={client.whatsapp.status === 'connected' ? 'green' : 'red'}>
-                    {client.whatsapp.status}
-                  </Badge>
-                </dd>
-              </div>
-              <div className="sm:col-span-1">
-                <dt className="text-sm font-medium text-gray-500">Phone Number</dt>
-                <dd className="mt-1 text-sm text-gray-900">{client.whatsapp.phoneNumber || 'Unknown'}</dd>
-              </div>
-              <div className="sm:col-span-1">
-                <dt className="text-sm font-medium text-gray-500">Display Name</dt>
-                <dd className="mt-1 text-sm text-gray-900">{client.whatsapp.pushName || 'Unknown'}</dd>
-              </div>
-            </dl>
-          )}
-        </Card>
+        <ClientWhatsAppSection clientId={id} initialWhatsapp={client.whatsapp} />
 
         {/* E. API Keys */}
         <Card className="p-6 lg:col-span-2">
