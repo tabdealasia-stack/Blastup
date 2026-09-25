@@ -282,6 +282,17 @@ async function processEvent(eventLog: INotificationEventLog) {
           } 
         }
       );
+
+      logger.error('Outbox terminal failure', {
+        eventLogId: eventLog._id.toString(),
+        clientId: eventLog.clientId.toString(),
+        event: eventLog.event,
+        errorCode,
+        errorMessage: error.message || String(error),
+        isTerminal,
+        maxAttemptsReached,
+        attempts: eventLog.attempts
+      });
     } else {
       // Unlock for backoff retry (15s backoff)
       await NotificationEventLog.updateOne(
