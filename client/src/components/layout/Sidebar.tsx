@@ -1,266 +1,109 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard, Wifi, MessageSquare, Users,
-  Send, Megaphone, BookOpen, Key, LogOut, Minus, Plus, Folder, X, Shield, ListTodo
-} from 'lucide-react';
-import { logout, getUser } from '@/lib/auth';
+import { clsx } from 'clsx';
+import { superadminNavigation, clientNavigation } from './navigation';
+import { useAuth } from '@/providers/AuthProvider';
+import { LogOut } from 'lucide-react';
 
-interface SidebarProps {
-  mobileOpen?: boolean;
-  onClose?: () => void;
-}
-
-export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
+export function Sidebar({ isMobileOpen, setMobileOpen }: { isMobileOpen: boolean; setMobileOpen: (o: boolean) => void }) {
   const pathname = usePathname();
-  const [chatbotOpen, setChatbotOpen] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { user, logout } = useAuth();
 
-  useEffect(() => {
-    getUser().then(u => {
-      if (u?.role === 'admin') {
-        setIsAdmin(true);
-      }
-    });
-  }, []);
-
-  const isChatbotActive = pathname.startsWith('/chatbot');
+  const navigation = user?.role === 'superadmin' ? superadminNavigation : clientNavigation;
 
   return (
-    <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
-      {/* Header / Brand with logo.svg */}
-      <div className="sidebar-header">
-        <Image
-          src="/logo.svg"
-          alt="Blastup Logo"
-          width={110}
-          height={32}
-          style={{ objectFit: 'contain' }}
-          priority
+    <>
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-gray-900/80 lg:hidden"
+          onClick={() => setMobileOpen(false)}
         />
-        {/* Mobile close button */}
-        {onClose && (
-          <button
-            className="sidebar-close-btn"
-            onClick={onClose}
-            aria-label="Close Sidebar"
-          >
-            <X size={20} />
-          </button>
-        )}
-      </div>
+      )}
 
-      {/* Navigation Groups */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        {/* GENERAL */}
-        <div className="sidebar-section">
-          <span className="sidebar-section-title">GENERAL</span>
-          <Link
-            href="/dashboard"
-            className={`sidebar-item ${pathname === '/dashboard' ? 'active' : ''}`}
-            id="nav-dashboard"
-          >
-            <LayoutDashboard />
-            <span>Dashboard</span>
-          </Link>
-          <Link
-            href="/whatsapp"
-            className={`sidebar-item ${pathname.startsWith('/whatsapp') ? 'active' : ''}`}
-            id="nav-whatsapp"
-          >
-            <Wifi />
-            <span>WhatsApp</span>
-          </Link>
-          <Link
-            href="/chats"
-            className={`sidebar-item ${pathname.startsWith('/chats') ? 'active' : ''}`}
-            id="nav-chats"
-          >
-            <MessageSquare />
-            <span>Chats</span>
+      <div className={clsx(
+        "fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:flex lg:flex-col",
+        isMobileOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="flex items-center h-16 px-6 border-b border-gray-200">
+          <Link href={user?.role === 'superadmin' ? '/tabdeal' : '/dashboard'} className="flex items-center gap-2">
+            <span className="text-xl font-bold text-gray-900">Blastup</span>
+            {user?.role === 'superadmin' && <span className="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-md">Admin</span>}
           </Link>
         </div>
 
-        {/* MESSAGING */}
-        <div className="sidebar-section">
-          <span className="sidebar-section-title">MESSAGING</span>
-          <Link
-            href="/contacts"
-            className={`sidebar-item ${pathname.startsWith('/contacts') ? 'active' : ''}`}
-            id="nav-contacts"
-          >
-            <Users />
-            <span>Contacts</span>
-          </Link>
-          <Link
-            href="/reminders"
-            className={`sidebar-item ${pathname.startsWith('/reminders') ? 'active' : ''}`}
-            id="nav-reminders"
-          >
-            <ListTodo />
-            <span>Reminders</span>
-          </Link>
-          <Link
-            href="/campaigns"
-            className={`sidebar-item ${pathname.startsWith('/campaigns') ? 'active' : ''}`}
-            id="nav-campaigns"
-          >
-            <Megaphone />
-            <span>Campaigns</span>
-          </Link>
-
-          {/* CHATBOT TREE SECTION (Matching user provided design) */}
-          <div className="tree-group" style={{ margin: '6px 0' }}>
-            {/* Header pill capsule */}
-            <div
-              className={`tree-header ${isChatbotActive ? 'header-active' : ''}`}
-              onClick={() => setChatbotOpen(!chatbotOpen)}
-              id="nav-chatbot-tree-toggle"
-            >
-              <div className="tree-header-left">
-                <Folder size={18} />
-                <span>Automations</span>
-              </div>
-              <button
-                type="button"
-                className="tree-toggle-btn"
-                aria-label="Toggle Chatbot Submenu"
-              >
-                {chatbotOpen ? <Minus size={14} /> : <Plus size={14} />}
-              </button>
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+          {navigation.map((item) => (
+            <div key={item.name}>
+              {item.children ? (
+                <div className="mb-2 mt-4">
+                  <div className="px-3 mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                    {item.name}
+                  </div>
+                  <div className="space-y-1">
+                    {item.children.map((child) => {
+                      const isActive = pathname === child.href;
+                      return (
+                        <Link
+                          key={child.name}
+                          href={child.href}
+                          onClick={() => setMobileOpen(false)}
+                          className={clsx(
+                            "flex items-center px-3 py-2 text-sm font-medium rounded-md",
+                            isActive
+                              ? "bg-blue-50 text-blue-700"
+                              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          )}
+                        >
+                          <child.icon className={clsx(
+                            "mr-3 h-5 w-5 flex-shrink-0",
+                            isActive ? "text-blue-700" : "text-gray-400 group-hover:text-gray-500"
+                          )} />
+                          {child.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  href={item.href || '#'}
+                  onClick={() => setMobileOpen(false)}
+                  className={clsx(
+                    "flex items-center px-3 py-2 text-sm font-medium rounded-md mt-1",
+                    pathname === item.href
+                      ? "bg-blue-50 text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  )}
+                >
+                  <item.icon className={clsx(
+                    "mr-3 h-5 w-5 flex-shrink-0",
+                    pathname === item.href ? "text-blue-700" : "text-gray-400 group-hover:text-gray-500"
+                  )} />
+                  {item.name}
+                </Link>
+              )}
             </div>
+          ))}
+        </div>
 
-            {/* Tree sub-items container */}
-            {chatbotOpen && (
-              <div className="tree-children">
-                {/* Vertical tree connector line */}
-                <div className="tree-line" />
-
-                {/* Sub-item 1: Chatbot */}
-                <div className="tree-child-wrapper">
-                  <div className="tree-dot" />
-                  <Link
-                    href="/chatbot"
-                    className={`tree-child-item ${pathname === '/chatbot' ? 'active' : ''}`}
-                    id="nav-chatbot"
-                  >
-                    <Folder size={16} />
-                    <span>Website Chatbot</span>
-                  </Link>
-                </div>
-
-                {/* Sub-item 2: No-Code Chatbot */}
-                <div className="tree-child-wrapper">
-                  <div className="tree-dot" />
-                  <Link
-                    href="/chatbot/no-code"
-                    className={`tree-child-item ${pathname === '/chatbot/no-code' || pathname === '/chatbot/urban-studioz' ? 'active' : ''}`}
-                    id="nav-no-code-chatbot"
-                  >
-                    <Folder size={16} />
-                    <span>WhatsApp Chatbot</span>
-                  </Link>
-                </div>
-
-                {/* Sub-item 3: Chatbot Leads */}
-                <div className="tree-child-wrapper">
-                  <div className="tree-dot" />
-                  <Link
-                    href="/chatbot/leads"
-                    className={`tree-child-item ${pathname === '/chatbot/leads' ? 'active' : ''}`}
-                    id="nav-chatbot-leads"
-                  >
-                    <Folder size={16} />
-                    <span>Website Leads</span>
-                  </Link>
-                </div>
-              </div>
-            )}
+        <div className="p-4 border-t border-gray-200">
+          <div className="flex items-center mb-4 px-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">{user?.username}</p>
+              <p className="text-xs text-gray-500 truncate capitalize">{user?.role}</p>
+            </div>
           </div>
-
-          <Link
-            href="/send"
-            className={`sidebar-item ${pathname.startsWith('/send') ? 'active' : ''}`}
-            id="nav-send-message"
+          <button
+            onClick={() => logout()}
+            className="flex items-center w-full px-3 py-2 text-sm font-medium text-red-600 rounded-md hover:bg-red-50"
           >
-            <Send />
-            <span>Send Message</span>
-          </Link>
-        </div>
-
-        {/* DEVELOPER */}
-        <div className="sidebar-section">
-          <span className="sidebar-section-title">DEVELOPER</span>
-          <Link
-            href="/docs"
-            className={`sidebar-item ${pathname.startsWith('/docs') ? 'active' : ''}`}
-            id="nav-api-docs"
-          >
-            <BookOpen />
-            <span>API Docs</span>
-          </Link>
-          <Link
-            href="/settings"
-            className={`sidebar-item ${pathname.startsWith('/settings') ? 'active' : ''}`}
-            id="nav-api-keys---settings"
-          >
-            <Key />
-            <span>API Keys & Settings</span>
-          </Link>
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className={`sidebar-item ${pathname.startsWith('/admin') ? 'active' : ''}`}
-              id="nav-admin"
-            >
-              <Shield />
-              <span>Admin Accounts</span>
-            </Link>
-          )}
+            <LogOut className="mr-3 h-5 w-5" />
+            Logout
+          </button>
         </div>
       </div>
-
-      {/* Footer / Logout & Non-editable Branding */}
-      <div className="sidebar-footer">
-        <button
-          id="sidebar-logout"
-          className="sidebar-item"
-          style={{ width: '100%', cursor: 'pointer', border: 'none', background: 'none' }}
-          onClick={() => logout()}
-        >
-          <LogOut />
-          <span>Logout</span>
-        </button>
-
-        {/* NON-EDITABLE BRANDING - Developed by Kalp Intelligence */}
-        <div style={{
-          marginTop: 10,
-          padding: '8px 12px 4px 12px',
-          borderTop: '1px solid rgba(226, 232, 240, 0.6)',
-          textAlign: 'center',
-          fontSize: 11,
-          color: '#64748b',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 4,
-          flexWrap: 'wrap',
-        }}>
-          <span>Developed by</span>
-          <a
-            href="https://kalpintelligence.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: '#16a34a', fontWeight: 600, textDecoration: 'none' }}
-          >
-            Kalp Intelligence
-          </a>
-        </div>
-      </div>
-    </aside>
+    </>
   );
 }

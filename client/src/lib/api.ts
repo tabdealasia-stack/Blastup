@@ -425,4 +425,4 @@ export const tabdealApi = {
   getDashboardMetrics: () => request<{ success: boolean; data: any }>('/api/tabdeal/dashboard-metrics'),
 };
 
-export { ApiError };
+export { ApiError, request };

@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 // Routes that require authentication
 const PROTECTED_PREFIXES = [
   '/dashboard',
+  '/tabdeal',
   '/whatsapp',
   '/chats',
   '/contacts',

@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
 import '@/styles/globals.css';
+import { SWRProvider } from '@/providers/SWRProvider';
+import { AuthProvider } from '@/providers/AuthProvider';
+import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
-  title: 'Blastup — WhatsApp Automation Platform',
+  title: 'Blastup - WhatsApp Automation Platform',
   description: 'Production-ready WhatsApp Automation & Broadcasting Platform',
   icons: {
     icon: '/favicon.png',
@@ -26,7 +29,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <SWRProvider>
+          <AuthProvider>
+            {children}
+            <Toaster position="top-right" />
+          </AuthProvider>
+        </SWRProvider>
+      </body>
     </html>
   );
 }

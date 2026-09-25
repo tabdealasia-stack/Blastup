@@ -1,12 +1,14 @@
-import Header from '@/components/layout/Header';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/ui/States';
 
-export default function PlaceholderPage() {
+export default function ApiKeysPage() {
   return (
-    <>
-      <Header title="Management" subtitle="Coming Soon" />
-      <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>
-        <h2>This module is under construction (Phase 1B+)</h2>
-      </div>
-    </>
+    <div>
+      <PageHeader title="Api Keys" description="Manage api keys" />
+      <EmptyState 
+        title="Module coming in Phase 9A-10B" 
+        description="This functionality has not yet been implemented." 
+      />
+    </div>
   );
 }
