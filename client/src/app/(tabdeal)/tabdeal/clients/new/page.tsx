@@ -1,244 +1,146 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, ShieldBan, Copy } from 'lucide-react';
-import Header from '@/components/layout/Header';
-import { tabdealApi } from '@/lib/api';
-import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { tabdealApi, ApiError } from '@/lib/api';
+import toast from 'react-hot-toast';
 
-export default function NewClientPage() {
-  const [categories, setCategories] = useState<any[]>([]);
+export default function CreateClientPage() {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     businessName: '',
     categoryId: '',
-    whatsappNumber: '',
-    website: '',
     email: '',
-    timezone: 'Asia/Kolkata',
-    defaultCountryCode: '91',
+    whatsappNumber: '',
   });
-  
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<any>(null);
-  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const res = await tabdealApi.getCategories();
-      setCategories(res.data.filter((c: any) => c.active));
-    } catch (err: any) {
-      console.error(err);
-    }
-  };
+  const { data: categoriesData, isLoading: loadingCategories } = useSWR(
+    '/api/tabdeal/categories',
+    tabdealApi.getCategories
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    setFormError(null);
+
+    if (!formData.businessName.trim() || !formData.categoryId) {
+      setFormError('Business name and category are required.');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      const payload = {
+      const res = await tabdealApi.createClient({
         ...formData,
-        whatsappNumber: formData.whatsappNumber || null,
-        website: formData.website || null,
-        email: formData.email || null,
-      };
-      
-      const res = await tabdealApi.createClient(payload);
-      setResult(res.data);
+        email: formData.email || undefined,
+        whatsappNumber: formData.whatsappNumber || undefined,
+      });
+
+      toast.success('Client created successfully');
+      router.push(`/tabdeal/clients/${res.data._id}`);
     } catch (err: any) {
-      setError(err.message || 'Failed to provision client');
+      if (err instanceof ApiError) {
+        setFormError(err.message || 'Failed to create client');
+      } else {
+        setFormError('An unexpected error occurred');
+      }
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const copyApiKey = () => {
-    if (result?.apiKey) {
-      navigator.clipboard.writeText(result.apiKey);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  if (result) {
-    return (
-      <>
-        <Header title="Client Provisioned" subtitle="Client created successfully" />
-        <div className="page-content" style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
-          
-          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '32px', textAlign: 'center' }}>
-            <CheckCircle size={64} style={{ color: '#10b981', margin: '0 auto 24px' }} />
-            <h2 style={{ margin: '0 0 16px', color: '#0f172a' }}>{result.businessName} has been provisioned</h2>
-            
-            <div style={{ textAlign: 'left', background: '#f8fafc', padding: '24px', borderRadius: '8px', marginBottom: '32px' }}>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#334155' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}><CheckCircle size={16} className="text-emerald-500"/> Client created with slug: <strong>{result.slug}</strong></li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}><CheckCircle size={16} className="text-emerald-500"/> Template Pack resolved</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}><CheckCircle size={16} className="text-emerald-500"/> <strong>{result.templatesProvisioned}</strong> Templates assigned</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}><CheckCircle size={16} className="text-emerald-500"/> WhatsApp instance provisioned</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}><CheckCircle size={16} className="text-emerald-500"/> API credentials generated</li>
-              </ul>
-            </div>
-
-            {result.apiKey && (
-              <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '24px', marginBottom: '32px', textAlign: 'left' }}>
-                <h3 style={{ margin: '0 0 12px', color: '#b45309', fontSize: '16px' }}>API Key Created</h3>
-                <p style={{ margin: '0 0 16px', color: '#92400e', fontSize: '14px' }}>This key will only be shown once. Please copy it and store it securely.</p>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <input 
-                    type="text" 
-                    readOnly 
-                    value={result.apiKey}
-                    style={{ flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #fcd34d', background: '#fff', outline: 'none', fontFamily: 'monospace' }}
-                  />
-                  <button onClick={copyApiKey} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 16px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500 }}>
-                    <Copy size={16} /> {copied ? 'Copied' : 'Copy API Key'}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-              <Link href="/tabdeal/clients" style={{ padding: '12px 24px', background: '#f1f5f9', color: '#475569', borderRadius: '8px', textDecoration: 'none', fontWeight: 500 }}>
-                Back to Clients
-              </Link>
-              <Link href={`/tabdeal/clients/${result.clientId}`} style={{ padding: '12px 24px', background: '#6366F1', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontWeight: 500 }}>
-                View Client Details & Connect WhatsApp
-              </Link>
-            </div>
-          </div>
-
-        </div>
-      </>
-    );
-  }
+  const categories = categoriesData?.data?.filter((c: any) => c.active) || [];
 
   return (
-    <>
-      <Header title="Add Client" subtitle="Provision a new client tenant" />
-      
-      <div className="page-content" style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
-        
-        <div style={{ marginBottom: '24px' }}>
-          <Link href="/tabdeal/clients" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#64748b', textDecoration: 'none', fontWeight: 500 }}>
-            <ArrowLeft size={16} /> Back to Clients
-          </Link>
-        </div>
+    <div className="max-w-3xl mx-auto">
+      <PageHeader 
+        title="Create Client" 
+        description="Provision a new client workspace and automatically assign notification templates." 
+      />
 
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '32px' }}>
-          {error && (
-            <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '16px', borderRadius: '8px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShieldBan size={18} />
-              {error}
+      <Card className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {formError && (
+            <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md">
+              {formError}
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#334155' }}>Business Name *</label>
-                <input 
-                  type="text" 
-                  value={formData.businessName} 
-                  onChange={e => setFormData({ ...formData, businessName: e.target.value })}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#334155' }}>Category *</label>
-                <select 
-                  value={formData.categoryId} 
-                  onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff' }}
-                  required
-                >
-                  <option value="" disabled>Select a Category</option>
-                  {categories.map(c => (
-                    <option key={c._id} value={c._id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+          <Input
+            label="Business Name *"
+            placeholder="e.g. Divine Tours"
+            value={formData.businessName}
+            onChange={(e) => setFormData(f => ({ ...f, businessName: e.target.value }))}
+            required
+            maxLength={150}
+          />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#334155' }}>WhatsApp Number *</label>
-                <input 
-                  type="text" 
-                  value={formData.whatsappNumber} 
-                  onChange={e => setFormData({ ...formData, whatsappNumber: e.target.value })}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#334155' }}>Email</label>
-                <input 
-                  type="email" 
-                  value={formData.email} 
-                  onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                />
-              </div>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category (Determines Master Templates) *
+            </label>
+            <select
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              value={formData.categoryId}
+              onChange={(e) => setFormData(f => ({ ...f, categoryId: e.target.value }))}
+              required
+              disabled={loadingCategories}
+            >
+              <option value="">Select a category...</option>
+              {categories.map((c: any) => (
+                <option key={c._id} value={c._id}>
+                  {c.name} {c.defaultTemplatePackId ? '' : '(No default pack)'}
+                </option>
+              ))}
+            </select>
+            {loadingCategories && <p className="text-xs text-gray-500 mt-1">Loading categories...</p>}
+          </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#334155' }}>Website</label>
-              <input 
-                type="url" 
-                value={formData.website} 
-                onChange={e => setFormData({ ...formData, website: e.target.value })}
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                placeholder="https://"
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Input
+              label="Email (Optional)"
+              type="email"
+              placeholder="contact@business.com"
+              value={formData.email}
+              onChange={(e) => setFormData(f => ({ ...f, email: e.target.value }))}
+            />
+            
+            <Input
+              label="WhatsApp Number (Optional)"
+              placeholder="e.g. 919876543210"
+              value={formData.whatsappNumber}
+              onChange={(e) => setFormData(f => ({ ...f, whatsappNumber: e.target.value }))}
+            />
+          </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#334155' }}>Timezone</label>
-                <select 
-                  value={formData.timezone} 
-                  onChange={e => setFormData({ ...formData, timezone: e.target.value })}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff' }}
-                >
-                  <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
-                  <option value="UTC">UTC</option>
-                  <option value="America/New_York">America/New_York (EST)</option>
-                </select>
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#334155' }}>Default Country Code</label>
-                <input 
-                  type="text" 
-                  value={formData.defaultCountryCode} 
-                  onChange={e => setFormData({ ...formData, defaultCountryCode: e.target.value })}
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button 
-                type="submit" 
-                disabled={loading}
-                style={{ padding: '12px 32px', background: '#6366F1', color: '#fff', borderRadius: '8px', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '16px' }}
-              >
-                {loading ? 'Creating Client...' : 'Create Client'}
-              </button>
-            </div>
-          </form>
-        </div>
-
-      </div>
-    </>
+          <div className="pt-4 flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => router.push('/tabdeal/clients')}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              isLoading={isSubmitting}
+              disabled={!formData.businessName || !formData.categoryId || isSubmitting}
+            >
+              Create Client & Provision Templates
+            </Button>
+          </div>
+        </form>
+      </Card>
+    </div>
   );
 }
