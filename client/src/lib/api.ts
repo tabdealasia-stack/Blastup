@@ -382,6 +382,10 @@ export const analyticsApi = {
 };
 
 // ── Tabdeal Management ──────────────────────────────────────────────
+export const clientTemplatesApi = {
+  list: (params?: any) => request<{ success: boolean; data: any[]; pagination: any }>('/api/client-templates', { params }),
+};
+
 export const tabdealApi = {
   // Categories
   getCategories: () => request<{ success: boolean; data: any[] }>('/api/tabdeal/categories'),
