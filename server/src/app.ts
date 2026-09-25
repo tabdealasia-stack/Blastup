@@ -28,6 +28,7 @@ import analyticsRoutes from './routes/analytics.routes';
 import reminderRoutes from './routes/reminder.routes';
 import notificationEventRoutes from './routes/notification-event.routes';
 import tabdealRoutes from './routes/tabdeal.routes';
+import telemetryRoutes from './routes/telemetry.routes';
 import clientTemplateRoutes from './routes/client-template.routes';
 
 import { initCampaignScheduler } from './services/campaignScheduler';
@@ -177,6 +178,10 @@ export function createApp(): express.Application {
   );
 
   app.use('/api/reminders', reminderRoutes);
+
+  app.use('/api', telemetryRoutes);
+
+  app.use('/api/client-templates', clientTemplateRoutes);
 
   app.use('/api/notifications', notificationEventRoutes);
 
