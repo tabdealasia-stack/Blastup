@@ -385,6 +385,7 @@ export const analyticsApi = {
 export const tabdealApi = {
   // Categories
   getCategories: () => request<{ success: boolean; data: any[] }>('/api/tabdeal/categories'),
+  getCategory: (id: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/categories/${id}`),
   createCategory: (data: any) => request<{ success: boolean; data: any }>('/api/tabdeal/categories', { method: 'POST', body: JSON.stringify(data) }),
   updateCategory: (id: string, data: any) => request<{ success: boolean; data: any }>(`/api/tabdeal/categories/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteCategory: (id: string) => request<{ success: boolean; message: string }>(`/api/tabdeal/categories/${id}`, { method: 'DELETE' }),
@@ -416,6 +417,9 @@ export const tabdealApi = {
   updateTemplate: (id: string, data: any) => request<{ success: boolean; data: any }>(`/api/tabdeal/templates/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   updateTemplateStatus: (id: string, status: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/templates/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   deleteTemplate: (id: string) => request<{ success: boolean; message: string }>(`/api/tabdeal/templates/${id}`, { method: 'DELETE' }),
+
+  // Client Templates
+  getClientTemplates: (params?: any) => request<{ success: boolean; data: any[]; pagination: any }>('/api/tabdeal/client-templates', { params }),
 
   // Logs & Diagnostics
   getMessageLogs: (params?: any) => request<{ success: boolean; data: any[]; pagination: any }>('/api/tabdeal/message-logs', { params }),

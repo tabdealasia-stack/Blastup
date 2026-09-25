@@ -1,14 +1,95 @@
+'use client';
+
+import useSWR from 'swr';
+import Link from 'next/link';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { EmptyState } from '@/components/ui/States';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { ErrorState, EmptyState } from '@/components/ui/States';
+import { Eye, Lock } from 'lucide-react';
+import { tabdealApi } from '@/lib/api';
 
 export default function CategoriesPage() {
+  const { data, error, isLoading } = useSWR(
+    '/api/tabdeal/categories',
+    tabdealApi.getCategories
+  );
+
   return (
     <div>
-      <PageHeader title="Categories" description="Manage categories" />
-      <EmptyState 
-        title="Module coming in Phase 9A-10B" 
-        description="This functionality has not yet been implemented." 
+      <PageHeader 
+        title="Master Categories" 
+        description="View all master categories and their usage across the platform."
+        action={
+          <div className="flex items-center text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-md font-medium">
+            <Lock className="w-4 h-4 mr-2" />
+            Master Catalogue � Read Only
+          </div>
+        }
       />
+
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-4">
+          <div className="text-sm font-medium text-gray-500">Total Categories</div>
+          <div className="mt-1 text-2xl font-semibold text-gray-900">
+            {isLoading ? '...' : (data?.data?.length || 0)}
+          </div>
+        </Card>
+      </div>
+
+      <Card className="overflow-hidden">
+        {isLoading ? (
+          <div className="p-8">
+            <div className="animate-pulse space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-12 bg-gray-100 rounded"></div>
+              ))}
+            </div>
+          </div>
+        ) : error ? (
+          <ErrorState title="Failed to load categories" />
+        ) : !data?.data || data.data.length === 0 ? (
+          <EmptyState title="No categories found" />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name / Slug</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Template Packs</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active Clients</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {data.data.map((category: any) => (
+                  <tr key={category._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900">{category.name}</div>
+                      <div className="text-sm text-gray-500 font-mono">{category.slug}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <Badge variant={category.active ? 'green' : 'gray'}>
+                        {category.active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                      {category.packCount || 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                      {category.clientCount || 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(category.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
