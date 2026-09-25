@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { ExternalLink, Github } from 'lucide-react';
 
 export default function Footer() {
@@ -64,7 +64,7 @@ export default function Footer() {
           color: '#94a3b8',
         }}>
           <div>
-            © 2026 Blastup. MIT License.
+            Â© 2026 Blastup. MIT License.
           </div>
 
           {/* NON-EDITABLE BRANDING */}

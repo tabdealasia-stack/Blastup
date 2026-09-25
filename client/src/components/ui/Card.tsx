@@ -1,9 +1,9 @@
-﻿import { ReactNode } from 'react';
-import { clsx } from 'clsx';
+﻿import { clsx } from 'clsx';
+import { HTMLAttributes } from 'react';
 
-export function Card({ className, children }: { className?: string; children: ReactNode }) {
+export function Card({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={clsx("bg-white shadow rounded-lg border border-gray-200", className)}>
+    <div className={clsx("bg-white rounded-xl border border-gray-200/75 shadow-sm overflow-hidden", className)} {...props}>
       {children}
     </div>
   );

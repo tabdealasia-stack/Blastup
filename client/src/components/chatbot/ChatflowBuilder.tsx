@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
 import { whatsappApi } from '@/lib/api';
@@ -73,7 +73,7 @@ const DEFAULT_FLOWS: FlowNode[] = [
     title: 'Media + Buttons',
     subtitle: 'Headway 225',
     imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80',
-    content: 'Welcome to Urban Studioz 👋 Select from the options below',
+    content: 'Welcome to Urban Studioz ðŸ‘‹ Select from the options below',
     buttons: [
       { id: 'b1', label: 'Shop Now', targetNodeId: 'node-msg' },
       { id: 'b2', label: 'Track Order', targetNodeId: 'node-msg' },
@@ -573,7 +573,7 @@ export default function ChatflowBuilder({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-      {/* ── Top Header Bar ── */}
+      {/* â”€â”€ Top Header Bar â”€â”€ */}
       <div className="card" style={{
         padding: '14px 20px',
         display: 'flex',
@@ -674,7 +674,7 @@ export default function ChatflowBuilder({
         </div>
       </div>
 
-      {/* Selected node editor — every message, image and button is editable. */}
+      {/* Selected node editor â€” every message, image and button is editable. */}
       <div style={{
         marginBottom: 16,
         padding: 16,
@@ -708,7 +708,7 @@ export default function ChatflowBuilder({
                 <input type="file" accept="image/*" ref={imageInputRef} onChange={e => handleImageUpload(e.target.files?.[0])} style={{ display: 'none' }} />
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   <button type="button" className="btn btn-secondary btn-sm" onClick={() => imageInputRef.current?.click()} disabled={uploadingImage}>
-                    <Upload size={13} /> {uploadingImage ? 'Uploading…' : 'Upload image'}
+                    <Upload size={13} /> {uploadingImage ? 'Uploadingâ€¦' : 'Upload image'}
                   </button>
                   {selectedNode.imageUrl && <button type="button" className="btn btn-secondary btn-sm" onClick={() => updateNode(selectedNode.id, { imageUrl: undefined })}><ImageOff size={13} /> Remove</button>}
                 </div>
@@ -764,7 +764,7 @@ export default function ChatflowBuilder({
         )}
       </div>
 
-      {/* ── Main Workspace: Canvas Board (Left) + Phone Simulator (Right) ── */}
+      {/* â”€â”€ Main Workspace: Canvas Board (Left) + Phone Simulator (Right) â”€â”€ */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'minmax(0, 1fr) 360px',
@@ -772,7 +772,7 @@ export default function ChatflowBuilder({
         alignItems: 'start',
       }}>
 
-        {/* ── Interactive Canvas Board ── */}
+        {/* â”€â”€ Interactive Canvas Board â”€â”€ */}
         <div
           ref={boardRef}
           onMouseMove={handleMouseMoveBoard}
@@ -1093,7 +1093,7 @@ export default function ChatflowBuilder({
 
                             {/* Target Node selector */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: '#64748b' }}>
-                              <span>→ Next:</span>
+                              <span>â†’ Next:</span>
                               <select
                                 value={btn.targetNodeId || ''}
                                 onChange={e => handleUpdateButton(node.id, btn.id, 'targetNodeId', e.target.value)}
@@ -1156,7 +1156,7 @@ export default function ChatflowBuilder({
           </div>
         </div>
 
-        {/* ── High-Fidelity WhatsApp Phone Simulator (Right) ── */}
+        {/* â”€â”€ High-Fidelity WhatsApp Phone Simulator (Right) â”€â”€ */}
         <div style={{
           background: '#ffffff',
           borderRadius: 24,
@@ -1244,13 +1244,13 @@ export default function ChatflowBuilder({
                         boxShadow: waProfile.isScanned ? 'none' : '0 1px 3px rgba(29,155,240,0.4)',
                       }}
                     >
-                      ✓
+                      âœ“
                     </span>
                   </div>
                   <div style={{ fontSize: 10, opacity: 0.85 }}>
                     {waProfile.isScanned
-                      ? (waProfile.phone ? `+${waProfile.phone} • Online` : 'Connected WhatsApp • Online')
-                      : 'Business Account • Online'}
+                      ? (waProfile.phone ? `+${waProfile.phone} â€¢ Online` : 'Connected WhatsApp â€¢ Online')
+                      : 'Business Account â€¢ Online'}
                   </div>
                 </div>
               </div>
@@ -1298,7 +1298,7 @@ export default function ChatflowBuilder({
                     <div style={{ padding: '8px 10px', fontSize: 12, color: '#111827', lineHeight: 1.4 }}>
                       {msg.text}
                       <div style={{ textAlign: 'right', fontSize: 9, color: '#6b7280', marginTop: 2 }}>
-                        {msg.time} {msg.sender === 'user' && '✓✓'}
+                        {msg.time} {msg.sender === 'user' && 'âœ“âœ“'}
                       </div>
                     </div>
 

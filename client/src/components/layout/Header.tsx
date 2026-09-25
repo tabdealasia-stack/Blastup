@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { UserCircle, LogOut, ChevronDown, Wifi, WifiOff, Info, Menu } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';

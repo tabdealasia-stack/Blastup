@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ── WA Platform Design System — Nexus-Inspired Pure Light Theme ── */
 
 :root {
@@ -1772,4 +1776,5 @@ tr:hover td {
     max-width: 85%;
   }
 }
+
 

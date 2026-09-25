@@ -1,9 +1,9 @@
-/**
+﻿/**
  * Skeleton shimmer components
  * Use these instead of spinners for a polished loading experience.
  */
 
-// ── Stat Card Skeleton ──────────────────────────────────────
+// â”€â”€ Stat Card Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function SkeletonStatCard() {
   return (
     <div className="skeleton-card">
@@ -19,7 +19,7 @@ export function SkeletonStatCard() {
   );
 }
 
-// ── Chat Row Skeleton ──────────────────────────────────────
+// â”€â”€ Chat Row Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function SkeletonChatRow() {
   return (
     <div className="skeleton-chat-row">
@@ -33,7 +33,7 @@ export function SkeletonChatRow() {
   );
 }
 
-// ── Contact Table Row Skeleton ──────────────────────────────
+// â”€â”€ Contact Table Row Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function SkeletonTableRow({ cols = 4 }: { cols?: number }) {
   const widths = ['15%', '28%', '25%', '20%', '12%'];
   return (
@@ -50,7 +50,7 @@ export function SkeletonTableRow({ cols = 4 }: { cols?: number }) {
   );
 }
 
-// ── Log Row Skeleton ────────────────────────────────────────
+// â”€â”€ Log Row Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function SkeletonLogRow() {
   return (
     <div className="skeleton-log-row">
@@ -61,7 +61,7 @@ export function SkeletonLogRow() {
   );
 }
 
-// ── Bar Chart Skeleton ──────────────────────────────────────
+// â”€â”€ Bar Chart Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const BAR_HEIGHTS = ['40%', '65%', '90%', '55%', '75%', '45%', '80%'];
 export function SkeletonBarChart() {
   return (
@@ -77,7 +77,7 @@ export function SkeletonBarChart() {
   );
 }
 
-// ── Profile Header Skeleton ─────────────────────────────────
+// â”€â”€ Profile Header Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function SkeletonProfile() {
   return (
     <div className="skeleton-profile-header">
@@ -91,7 +91,7 @@ export function SkeletonProfile() {
   );
 }
 
-// ── WhatsApp Status Card Skeleton ───────────────────────────
+// â”€â”€ WhatsApp Status Card Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function SkeletonStatusCard() {
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -109,7 +109,7 @@ export function SkeletonStatusCard() {
   );
 }
 
-// ── Generic block shimmer ───────────────────────────────────
+// â”€â”€ Generic block shimmer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function Shimmer({
   width = '100%',
   height = 14,
