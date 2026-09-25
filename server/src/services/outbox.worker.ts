@@ -172,29 +172,30 @@ async function processEvent(eventLog: INotificationEventLog) {
         .replace(new RegExp(`\\{${escapeRegExp(key)}\\}`, 'g'), value);
     }
 
-    // Dispatch via SafeMode/Baileys natively
-    const result = await messageService.sendText(account.instanceId, {
-      to: eventLog.recipient as string,
-      text: message,
-    });
-
-    const messageId = result?.key?.id || null;
-
-    // Use a transaction for the dual-write if ReplicaSet is configured, otherwise fallback to standard dual-write.
-    // NOTE: Baileys dispatch is explicitly external. WhatsApp delivery is NOT atomic with this transaction.
-    // A crash right after sendText will leave EventLog processing, causing at-least-once duplicate retry.
+    let messageLog = await MessageLog.findOne({ clientId: client._id, eventId: eventLog.eventId });
     
-    let session = null;
-    try {
-      session = await mongoose.startSession();
-      session.startTransaction();
-    } catch (e) {
-      // Standalone mongod doesn't support transactions, safely fallback
-      session = null;
-    }
-
-    try {
-      const messageLog = new MessageLog({
+    if (messageLog) {
+      if (messageLog.status === 'sent' || messageLog.status === 'delivered') {
+        eventLog.status = 'sent';
+        eventLog.messageLogId = messageLog._id;
+        eventLog.lockedUntil = null;
+        eventLog.errorCode = null;
+        eventLog.errorMessage = null;
+        await eventLog.save();
+        return;
+      }
+      if (messageLog.status === 'sending' || messageLog.status === 'queued') {
+        const e: any = new Error('Worker crashed during previous dispatch attempt. Cannot safely retry without risking duplicates.');
+        e.name = 'UncertainStateError';
+        throw e;
+      }
+      
+      messageLog.status = 'sending';
+      messageLog.templateId = template._id;
+      messageLog.messagePreview = message.substring(0, 500);
+      await messageLog.save();
+    } else {
+      messageLog = new MessageLog({
         clientId: client._id,
         apiKeyId: eventLog.apiKeyId,
         whatsappAccountId: account._id,
@@ -202,30 +203,48 @@ async function processEvent(eventLog: INotificationEventLog) {
         messageType: 'template',
         templateId: template._id,
         messagePreview: message.substring(0, 500),
-        status: 'sent',
-        providerMessageId: messageId,
-        sentAt: new Date(),
+        status: 'sending',
+        eventId: eventLog.eventId,
       });
-      await messageLog.save({ session });
+      await messageLog.save();
+    }
+
+    try {
+      const result = await messageService.sendText(account.instanceId, {
+        to: eventLog.recipient as string,
+        text: message,
+      });
+
+      const messageId = result?.key?.id || null;
+
+      messageLog.status = 'sent';
+      messageLog.providerMessageId = messageId;
+      messageLog.sentAt = new Date();
+      await messageLog.save();
 
       eventLog.status = 'sent';
       eventLog.messageLogId = messageLog._id;
       eventLog.lockedUntil = null;
       eventLog.errorCode = null;
       eventLog.errorMessage = null;
-      await eventLog.save({ session });
+      await eventLog.save();
 
-      if (session) {
-        await session.commitTransaction();
-      }
-    } catch (dbError) {
-      if (session) {
-        await session.abortTransaction();
-      }
-      throw dbError; // Bubble up to terminal catch to retry
-    } finally {
-      if (session) {
-        session.endSession();
+    } catch (dispatchError: any) {
+      const isPreDispatchError = dispatchError.name === 'SafeModeError' || 
+                                 dispatchError.name === 'ValidationError' || 
+                                 dispatchError.isBoom === true;
+
+      if (isPreDispatchError) {
+        messageLog.status = 'failed';
+        messageLog.errorCode = dispatchError.code || 'SEND_ERROR';
+        messageLog.errorMessage = dispatchError.message;
+        await messageLog.save().catch(() => {});
+        
+        throw dispatchError;
+      } else {
+        const e: any = new Error(`Ambiguous dispatch error: ${dispatchError.message}. Delivery uncertain.`);
+        e.name = 'UncertainStateError';
+        throw e;
       }
     }
 
@@ -237,6 +256,9 @@ async function processEvent(eventLog: INotificationEventLog) {
     if (error && error.name === 'SafeModeError') {
        errorCode = error.code || 'SAFEMODE_REJECTED';
        isTerminal = true; // SafeMode rejections should not be retried infinitely
+    } else if (error && error.name === 'UncertainStateError') {
+       errorCode = 'UNCERTAIN_STATE';
+       isTerminal = true;
     } else if (error && error.name === 'ValidationError') {
          errorCode = 'VALIDATION_FAILED';
          isTerminal = true; // Schema validation errors shouldn't be retried

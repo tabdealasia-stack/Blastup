@@ -20,6 +20,7 @@ export interface IMessageLog extends Document {
 
   // Store only a limited preview, not unnecessary sensitive content.
   messagePreview?: string | null;
+  eventId?: string | null;
 
   status: MessageStatus;
 
@@ -79,6 +80,7 @@ const messageLogSchema = new Schema<IMessageLog>(
       index: true,
     },
 
+    eventId: { type: String, default: null },
     messagePreview: {
       type: String,
       default: null,
@@ -127,6 +129,8 @@ const messageLogSchema = new Schema<IMessageLog>(
   }
 );
 
+// Common query pattern for client dashboards/API.
+messageLogSchema.index({ clientId: 1, eventId: 1 }, { unique: true, sparse: true });
 // Common query pattern for client dashboards/API.
 messageLogSchema.index({ clientId: 1, createdAt: -1 });
 
