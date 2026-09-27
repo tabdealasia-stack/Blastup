@@ -218,6 +218,8 @@ export async function createClient(req: Request, res: Response, next: NextFuncti
           clientId: client._id,
           businessName: client.businessName,
           slug: client.slug,
+          username, // Returned ONLY ONCE
+          password, // Returned ONLY ONCE
           apiKey: rawApiKey, // Returned ONLY ONCE
           templatesProvisioned: templates.length,
           whatsappProvisioned: true,
