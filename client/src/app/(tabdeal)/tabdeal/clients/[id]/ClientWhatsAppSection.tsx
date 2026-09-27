@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import useSWR from 'swr';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { tabdealApi, ApiError } from '@/lib/api';
 import { QRCodeSVG } from 'qrcode.react';
+import { Smartphone, RefreshCw, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function ClientWhatsAppSection({ clientId, initialWhatsapp }: { clientId: string, initialWhatsapp: any }) {
@@ -26,6 +27,7 @@ export function ClientWhatsAppSection({ clientId, initialWhatsapp }: { clientId:
 
   const status = statusData?.data?.status || (initialWhatsapp ? initialWhatsapp.status : 'disconnected');
   const isConnected = status === 'connected';
+  const isPending = status === 'pending';
 
   // Only poll QR if we are disconnected
   const { data: qrData, mutate: refreshQR } = useSWR(
@@ -33,7 +35,7 @@ export function ClientWhatsAppSection({ clientId, initialWhatsapp }: { clientId:
     () => tabdealApi.getClientWhatsAppQR(clientId, Date.now()),
     {
       refreshInterval: !isConnected ? 10000 : 0, // poll every 10s if not connected
-      shouldRetryOnError: false // Stop aggressive retry if QR is 404
+      shouldRetryOnError: false
     }
   );
 
@@ -75,92 +77,98 @@ export function ClientWhatsAppSection({ clientId, initialWhatsapp }: { clientId:
     }
   };
 
-  const hasAccount = !!initialWhatsapp || statusData?.data;
+  const hasAccount = !!initialWhatsapp || !!statusData?.data;
 
   return (
-    <Card className="p-6">
-      <div className="flex justify-between items-center mb-4 border-b pb-2">
-        <h3 className="text-lg font-medium text-gray-900">WhatsApp Integration</h3>
+    <Card className="p-6 h-full flex flex-col">
+      <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+          <Smartphone className="w-4 h-4 text-emerald-500" /> WhatsApp Integration
+        </h3>
         {hasAccount && (
-          <Badge variant={isConnected ? 'green' : 'red'}>
+          <Badge variant={isConnected ? 'success' : isPending ? 'warning' : 'danger'}>
             {status}
           </Badge>
         )}
       </div>
 
       {!hasAccount ? (
-        <div className="text-center py-6">
-          <p className="text-sm text-gray-500 mb-4">No WhatsApp account paired for this client.</p>
+        <div className="flex-1 flex flex-col items-center justify-center py-6 text-center">
+          <Smartphone className="w-8 h-8 text-gray-300 mb-3" />
+          <p className="text-sm text-gray-500 mb-4 px-4">No dedicated WhatsApp Baileys container has been provisioned for this client.</p>
           <Button 
             onClick={handleProvision} 
             isLoading={isProvisioning}
             variant="primary"
           >
-            Provision WhatsApp
+            Provision Container
           </Button>
         </div>
       ) : (
-        <div className="space-y-6">
-          <dl className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">Phone Number</dt>
-              <dd className="mt-1 text-sm text-gray-900">{initialWhatsapp?.phoneNumber || statusData?.data?.phoneNumber || 'Unknown'}</dd>
+        <div className="flex-1 flex flex-col space-y-5">
+          <dl className="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2 bg-gray-50/50 p-4 rounded-lg border border-gray-100">
+            <div>
+              <dt className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Phone Number</dt>
+              <dd className="mt-1 text-sm font-mono text-gray-900">{initialWhatsapp?.phoneNumber || statusData?.data?.phoneNumber || <span className="text-gray-400 italic">Unknown</span>}</dd>
             </div>
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">Display Name</dt>
-              <dd className="mt-1 text-sm text-gray-900">{initialWhatsapp?.pushName || statusData?.data?.pushName || 'Unknown'}</dd>
+            <div>
+              <dt className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Display Name</dt>
+              <dd className="mt-1 text-sm font-medium text-gray-900">{initialWhatsapp?.pushName || statusData?.data?.pushName || <span className="text-gray-400 italic">Unknown</span>}</dd>
             </div>
           </dl>
 
           {!isConnected && qrData?.data?.qr && (
-            <div className="mt-4 border p-4 rounded-md bg-gray-50 flex flex-col items-center">
-              <p className="text-sm text-gray-700 font-medium mb-3">Scan QR Code to Pair</p>
-              {/* Ensure we render a safe visual representation. If we don't have a library, we could use an img with a data URL if the backend returned base64, but Baileys usually returns the raw text string. 
-                  Given constraints: "use a safe QR rendering component/library already available... Do not introduce a large library unnecessarily. Never render QR data as raw text in the normal UI."
-                  We will use an API to render it if we don't have QRCode locally, or just suggest using a library. Wait, let's check if qrcode.react is installed. */}
-              {/* For now we will render it using an external reliable charting API safely without storing it, or just use a placeholder if we aren't allowed to hit external APIs. */}
-              {/* Actually, Baileys often gives the raw string. We can use a free lightweight QR endpoint. */}
-              <QRCodeSVG value={qrData.data.qr} size={200} className="bg-white p-2 border rounded-md" />
-              <p className="text-xs text-gray-400 mt-2">QR updates automatically</p>
+            <div className="mt-2 border border-gray-200 p-5 rounded-lg bg-white shadow-sm flex flex-col items-center">
+              <p className="text-sm text-gray-700 font-bold mb-4 uppercase tracking-wider">Scan to Pair</p>
+              <div className="bg-white p-3 border border-gray-100 rounded-xl shadow-sm">
+                <QRCodeSVG value={qrData.data.qr} size={180} />
+              </div>
+              <p className="text-xs text-gray-400 mt-4 flex items-center gap-1">
+                <RefreshCw className="w-3 h-3 animate-spin" /> Auto-refreshing
+              </p>
             </div>
           )}
 
-          <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
+          <div className="mt-auto pt-4 flex flex-col sm:flex-row justify-end gap-3 border-t border-gray-100">
             <Button 
-              variant="secondary" 
+              variant="outline" 
               onClick={() => { refreshStatus(); refreshQR(); }}
-              className="text-sm"
+              className="text-sm bg-white"
             >
-              Refresh Status
+              <RefreshCw className="w-4 h-4 mr-1.5 text-gray-500" />
+              Refresh
             </Button>
             
             {showReconnectConfirm ? (
-              <div className="flex items-center gap-2 bg-red-50 p-2 rounded-md border border-red-100">
-                <span className="text-xs text-red-700 font-medium">This will request a WhatsApp reconnection. Are you sure?</span>
-                <Button 
-                  variant="primary" 
-                  className="bg-red-600 hover:bg-red-700 text-xs py-1 h-8"
-                  onClick={handleReconnect}
-                  isLoading={isReconnecting}
-                >
-                  Confirm Reconnect
-                </Button>
-                <Button 
-                  variant="secondary" 
-                  className="text-xs py-1 h-8"
-                  onClick={() => setShowReconnectConfirm(false)}
-                  disabled={isReconnecting}
-                >
-                  Cancel
-                </Button>
+              <div className="flex flex-col sm:flex-row items-center gap-2 bg-rose-50 p-2.5 rounded-lg border border-rose-200">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 hidden sm:block" />
+                <span className="text-xs text-rose-700 font-medium whitespace-nowrap mr-2">Restart Container?</span>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button 
+                    variant="secondary" 
+                    className="text-xs h-8 flex-1 sm:flex-none border-rose-200 bg-white hover:bg-rose-100 text-rose-700"
+                    onClick={() => setShowReconnectConfirm(false)}
+                    disabled={isReconnecting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    variant="primary" 
+                    className="bg-rose-600 hover:bg-rose-700 text-white text-xs h-8 flex-1 sm:flex-none border-none shadow-sm"
+                    onClick={handleReconnect}
+                    isLoading={isReconnecting}
+                  >
+                    Confirm
+                  </Button>
+                </div>
               </div>
             ) : (
               <Button 
-                variant="secondary" 
+                variant="outline" 
                 onClick={() => setShowReconnectConfirm(true)}
-                className="text-sm text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50"
+                className="text-sm text-rose-600 hover:text-rose-700 border-rose-200 hover:bg-rose-50 bg-white"
               >
-                Reconnect Instance
+                Restart Container
               </Button>
             )}
           </div>
