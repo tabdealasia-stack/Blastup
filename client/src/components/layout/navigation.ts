@@ -1,4 +1,4 @@
-import {
+﻿import {
   LayoutDashboard,
   Users,
   Database,
@@ -37,11 +37,12 @@ export const superadminNavigation: NavItem[] = [
 ];
 
 export const clientNavigation: NavItem[] = [
-  { name: 'Overview', href: '/dashboard', icon: LayoutDashboard, group: 'OVERVIEW' },
-  { name: 'WhatsApp', href: '/dashboard/whatsapp', icon: MessageSquare, group: 'OPERATIONS' },
-  { name: 'My Templates', href: '/dashboard/templates', icon: FileText, group: 'OPERATIONS' },
-  { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, group: 'OPERATIONS' },
-  { name: 'Message Logs', href: '/dashboard/message-logs', icon: MessageCircle, group: 'OPERATIONS' },
-  { name: 'Integration Center', href: '/dashboard/integration', icon: Plug, group: 'INTEGRATIONS' },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings, group: 'SYSTEM' },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, group: 'OVERVIEW' },
+  { name: 'WhatsApp', href: '/dashboard/whatsapp', icon: MessageSquare, group: 'WHATSAPP' },
+  { name: 'My Templates', href: '/dashboard/templates', icon: FileText, group: 'WHATSAPP' },
+  { name: 'Integration', href: '/dashboard/integration', icon: Plug, group: 'INTEGRATION' },
+  { name: 'API Keys', href: '/dashboard/integration/keys', icon: Key, group: 'INTEGRATION' },
+  { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, group: 'ACTIVITY' },
+  { name: 'Message Logs', href: '/dashboard/message-logs', icon: MessageCircle, group: 'ACTIVITY' },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings, group: 'ACCOUNT' },
 ];
