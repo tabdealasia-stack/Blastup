@@ -59,7 +59,7 @@ export default function PublicAboutPage() {
             Businesses wanting to communicate with their audience on WhatsApp are typically faced with high per-conversation fees, strict template delays, and proprietary platform lock-in.
           </p>
           <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7 }}>
-            We created Blastup under the MIT license to give developers and teams direct control over their WhatsApp communication: send unlimited broadcasts, build automated 24/7 chatflows, and self-host on their own servers with complete data ownership.
+            We created Blastup under the MIT license to give developers and teams direct control over their WhatsApp communication: power transactional notifications, manage business alerts safely, and self-host on their own servers with complete data ownership.
           </p>
         </div>
 
@@ -81,10 +81,10 @@ export default function PublicAboutPage() {
 
             <div style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 20 }}>
               <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', marginBottom: 4 }}>
-                2. Unlimited WhatsApp Campaigns
+                2. Transactional Notification Infrastructure
               </div>
               <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6 }}>
-                Send broadcasts to segmented contact groups with personalized merge tags, action buttons, and product sliders. Built-in SafeMode delay pacing keeps your numbers healthy.
+                Dispatch business alerts using the robust Outbox Worker with template validation. Built-in SafeMode delay pacing keeps your connections healthy.
               </p>
             </div>
 

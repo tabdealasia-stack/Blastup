@@ -141,28 +141,7 @@ export default function NotFound() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
             gap: 12,
           }}>
-            <Link
-              href="/chatbot/no-code"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: '12px 14px',
-                borderRadius: 8,
-                border: '1px solid #e2e8f0',
-                background: '#ffffff',
-                textDecoration: 'none',
-                transition: 'border-color 0.15s ease',
-              }}
-            >
-              <div style={{ width: 32, height: 32, borderRadius: 6, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
-                <Bot size={16} />
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>No-Code Chatbot</div>
-                <div style={{ fontSize: 11, color: '#64748b' }}>Visual flow designer</div>
-              </div>
-            </Link>
+            
 
             <Link
               href="/deploy"
@@ -187,28 +166,7 @@ export default function NotFound() {
               </div>
             </Link>
 
-            <Link
-              href="/docs"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: '12px 14px',
-                borderRadius: 8,
-                border: '1px solid #e2e8f0',
-                background: '#ffffff',
-                textDecoration: 'none',
-                transition: 'border-color 0.15s ease',
-              }}
-            >
-              <div style={{ width: 32, height: 32, borderRadius: 6, background: '#faf5ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7c3aed' }}>
-                <BookOpen size={16} />
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>API Reference</div>
-                <div style={{ fontSize: 11, color: '#64748b' }}>REST endpoints &amp; webhooks</div>
-              </div>
-            </Link>
+            
 
             <a
               href="https://github.com/kalpintelligence/blastup"

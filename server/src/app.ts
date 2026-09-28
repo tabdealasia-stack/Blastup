@@ -13,19 +13,8 @@ import { authenticate } from './middleware/auth';
 
 import authRoutes from './routes/auth.routes';
 import whatsappRoutes from './routes/whatsapp.routes';
-import chatRoutes from './routes/chat.routes';
-import contactRoutes from './routes/contact.routes';
-import sendRoutes from './routes/send.routes';
-import logRoutes from './routes/log.routes';
 import healthRoutes from './routes/health.routes';
 import apiKeyRoutes from './routes/apikey.routes';
-import campaignRoutes from './routes/campaign.routes';
-import chatbotRoutes from './routes/chatbot.routes';
-import adminRoutes from './routes/admin.routes';
-import clientRoutes from './routes/client.routes';
-import travelBookingRoutes from './routes/travel-booking.routes';
-import analyticsRoutes from './routes/analytics.routes';
-import reminderRoutes from './routes/reminder.routes';
 import notificationEventRoutes from './routes/notification-event.routes';
 import tabdealRoutes from './routes/tabdeal.routes';
 import telemetryRoutes from './routes/telemetry.routes';
@@ -177,8 +166,7 @@ export function createApp(): express.Application {
     healthRoutes
   );
 
-  app.use('/api/reminders', reminderRoutes);
-
+  
   app.use('/api', telemetryRoutes);
 
   app.use('/api/client-templates', clientTemplateRoutes);
@@ -196,36 +184,11 @@ export function createApp(): express.Application {
     whatsappRoutes
   );
 
-  app.use(
-    '/api/chats',
-    apiLimiter,
-    chatRoutes
-  );
-
-  app.use(
-    '/api/contacts',
-    apiLimiter,
-    contactRoutes
-  );
-
-  app.use(
-    '/api/send',
-    apiLimiter,
-    sendRoutes
-  );
-
-  app.use(
-    '/api/campaigns',
-    apiLimiter,
-    campaignRoutes
-  );
-
-  app.use(
-    '/api/logs',
-    apiLimiter,
-    logRoutes
-  );
-
+  
+  
+  
+  
+  
   app.use(
     '/api/keys',
     apiLimiter,
@@ -238,37 +201,13 @@ export function createApp(): express.Application {
   //
   // POST /api/chatbot/message
   //
-  app.use(
-    '/api/chatbot',
-    apiLimiter,
-    chatbotRoutes
-  );
-
+  
   // ── Analytics API ─────────────────────────────────────────────────
-  app.use(
-    '/api/analytics',
-    apiLimiter,
-    analyticsRoutes
-  );
-
+  
   // ── Admin API ────────────────────────────────────────────────────
-  app.use(
-    '/api/admin',
-    apiLimiter,
-    adminRoutes
-  );
-
-  app.use(
-    '/api/admin',
-    apiLimiter,
-    clientRoutes
-  );
-
-  app.use(
-    '/api/travel',
-    travelBookingRoutes
-  );
-
+  
+  
+  
   // ── Safe Mode API ────────────────────────────────────────────────
   app.use(
     '/api/safemode',

@@ -90,139 +90,22 @@ export const whatsappApi = {
 };
 
 // ── Chats ─────────────────────────────────────────────────────────────
-export const chatsApi = {
-  list: (params?: { page?: number; limit?: number; search?: string; unreadOnly?: boolean }) =>
-    request<{ success: boolean; data: any[]; pagination: any }>('/api/chats', { params }),
 
-  get: (chatId: string) =>
-    request<{ success: boolean; data: any }>(`/api/chats/${encodeURIComponent(chatId)}`),
-
-  getMessages: (chatId: string, params?: { page?: number; limit?: number }) =>
-    request<{ success: boolean; data: any[]; pagination: any }>(
-      `/api/chats/${encodeURIComponent(chatId)}/messages`, { params }
-    ),
-
-  markRead: (chatId: string) =>
-    request(`/api/chats/${encodeURIComponent(chatId)}/read`, { method: 'PATCH' }),
-
-  deleteMessage: (msgId: string) =>
-    request(`/api/chats/messages/${msgId}`, { method: 'DELETE' }),
-};
 
 // ── Contacts ──────────────────────────────────────────────────────────
-export const contactsApi = {
-  list: (params?: { page?: number; limit?: number; search?: string; group?: string }) =>
-    request<{ success: boolean; data: any[]; pagination: any }>('/api/contacts', { params }),
 
-  get: (jid: string) =>
-    request<{ success: boolean; data: any }>(`/api/contacts/${encodeURIComponent(jid)}`),
 
-  getGroups: () =>
-    request<{ success: boolean; data: Array<{ name: string; count: number }> }>('/api/contacts/groups'),
 
-  importContacts: (contacts: Array<{ phone: string; name?: string; groups?: string[] }>, groups?: string[]) =>
-    request<{ success: boolean; data: { importedCount: number } }>('/api/contacts/import', {
-      method: 'POST',
-      body: JSON.stringify({ contacts, groups }),
-    }),
-
-  updateGroups: (jids: string[], groups: string[], action: 'add' | 'remove' = 'add') =>
-    request<{ success: boolean }>('/api/contacts/groups/update', {
-      method: 'POST',
-      body: JSON.stringify({ jids, groups, action }),
-    }),
-
-  update: (jid: string, data: { name?: string; phone?: string; groups?: string[] }) =>
-    request<{ success: boolean; data: any }>(`/api/contacts/${encodeURIComponent(jid)}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
-
-  delete: (jid: string) =>
-    request<{ success: boolean }>(`/api/contacts/${encodeURIComponent(jid)}`, { method: 'DELETE' }),
-};
-
-export const remindersApi = {
-  list: (params?: { page?: number; limit?: number }) => request<{ success: boolean; data: any[]; pagination: any }>('/api/reminders', { params }),
-  update: (taskId: number, data: Record<string, unknown>) =>
-    request<{ success: boolean; data: any }>(`/api/reminders/${taskId}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  cancel: (taskId: number) =>
-    request<{ success: boolean; data: any }>(`/api/reminders/${taskId}/cancel`, { method: 'POST' }),
-};
 
 
 // ── Campaigns ─────────────────────────────────────────────────────────
-export const campaignsApi = {
-  list: (params?: { page?: number; limit?: number; status?: string }) =>
-    request<{ success: boolean; data: any[]; pagination: any }>('/api/campaigns', { params }),
 
-  get: (id: string) =>
-    request<{ success: boolean; data: any }>(`/api/campaigns/${id}`),
-
-  create: (data: {
-    name: string;
-    templateText: string;
-    mediaUrl?: string;
-    interactiveType?: 'none' | 'button' | 'slider';
-    buttons?: any[];
-    sliderItems?: any[];
-    targetGroups?: string[];
-    scheduledAt: string;
-  }) =>
-    request<{ success: boolean; data: any }>('/api/campaigns', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  getLogs: (id: string, params?: { page?: number; limit?: number; status?: string }) =>
-    request<{ success: boolean; data: any[]; pagination: any }>(`/api/campaigns/${id}/logs`, { params }),
-
-  reCampaign: (id: string, data: { name?: string; filterStatus: string; scheduledAt: string }) =>
-    request<{ success: boolean; data: any }>(`/api/campaigns/${id}/recampaign`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  delete: (id: string) =>
-    request<{ success: boolean }>(`/api/campaigns/${id}`, { method: 'DELETE' }),
-};
 
 // ── Send ──────────────────────────────────────────────────────────────
-export const sendApi = {
-  text: (to: string, text: string) =>
-    request('/api/send/text', { method: 'POST', body: JSON.stringify({ to, text }) }),
 
-  button: (to: string, text: string, buttons: any[], footer?: string) =>
-    request('/api/send/button', {
-      method: 'POST',
-      body: JSON.stringify({ to, text, buttons, footer }),
-    }),
-
-  slider: (to: string, title: string, text: string, items: any[], footer?: string) =>
-    request('/api/send/slider', {
-      method: 'POST',
-      body: JSON.stringify({ to, title, text, items, footer }),
-    }),
-
-  media: (type: 'image' | 'video' | 'audio' | 'document', formData: FormData) => {
-    // FormData — don't set Content-Type (browser sets it with boundary)
-    return fetch(`${API_BASE}/api/send/${type}`, {
-      method: 'POST',
-      credentials: 'include',
-      body: formData,
-    }).then(async (r) => {
-      const data = await r.json();
-      if (!r.ok) throw new ApiError(r.status, data?.message || 'Send failed', data);
-      return data;
-    });
-  },
-};
 
 // ── Logs ──────────────────────────────────────────────────────────────
-export const logsApi = {
-  list: (params?: { page?: number; limit?: number; level?: string; category?: string }) =>
-    request<{ success: boolean; data: any[]; pagination: any }>('/api/logs', { params }),
-};
+
 
 // ── Health ────────────────────────────────────────────────────────────
 export const healthApi = {
@@ -240,40 +123,7 @@ export const keysApi = {
 };
 
 // ── Chatbot ─────────────────────────────────────────────────────────
-export const chatbotApi = {
-  get: () => request<{ success: boolean; data: any }>('/api/chatbot'),
 
-  update: (data: {
-    enabled?: boolean;
-    websiteEnabled?: boolean;
-    whatsappEnabled?: boolean;
-    replySource?: 'nocode' | 'standard' | 'off';
-    botName?: string;
-    botIcon?: string;
-    welcomeMessage?: string;
-    fallbackMessage?: string;
-    offlineMessage?: string;
-    headerText?: string;
-    subHeaderText?: string;
-    buttonLabel?: string;
-    primaryColor?: string;
-    secondaryColor?: string;
-    gradientAngle?: number;
-    gradient?: boolean;
-    position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-    theme?: 'classic' | 'glassmorphic';
-    whitelistedDomains?: string[];
-    rules?: Array<{ keyword: string; response: string; matchType: 'exact' | 'contains' | 'startsWith' }>;
-    collectLeads?: boolean;
-    leadFields?: Array<'name' | 'email' | 'phone'>;
-    flows?: any[];
-    websiteFlows?: any[];
-    whatsappFlows?: any[];
-  }) => request<{ success: boolean; data: any }>('/api/chatbot', {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  }),
-};
 
 // ── Chatbot Leads ─────────────────────────────────────────────────
 export const chatbotLeadsApi = {
@@ -343,43 +193,14 @@ export const knowledgeApi = {
 };
 
 // ── Admin ─────────────────────────────────────────────────────────
-export const adminApi = {
-  getUsers: () =>
-    request<{ success: boolean; data: any[] }>('/api/admin/users'),
 
-  toggleUserStatus: (id: string) =>
-    request<{ success: boolean; data: any }>(`/api/admin/users/${id}/status`, { method: 'PATCH' }),
-
-  deleteUser: (id: string) =>
-    request<{ success: boolean }>(`/api/admin/users/${id}`, { method: 'DELETE' }),
-};
 
 
 // ── Safe Mode ─────────────────────────────────────────────────────────
-export const safeModeApi = {
-  getStatus: (instanceId: string) =>
-    request<{ success: boolean; data: any }>(`/api/safemode/${encodeURIComponent(instanceId)}/status`),
-  
-  enable: (instanceId: string, tier: number = 1) =>
-    request<{ success: boolean; data: any }>(`/api/safemode/${encodeURIComponent(instanceId)}/enable`, {
-      method: 'POST',
-      body: JSON.stringify({ tier }),
-    }),
 
-  disable: (instanceId: string) =>
-    request<{ success: boolean; data: any }>(`/api/safemode/${encodeURIComponent(instanceId)}/disable`, {
-      method: 'POST',
-    }),
-};
 
 // ── Analytics ─────────────────────────────────────────────────────────
-export const analyticsApi = {
-  weeklyMessages: () =>
-    request<{ success: boolean; data: Array<{ date: string; day: string; sent: number; received: number; total: number }> }>(
-      '/api/analytics/messages/weekly'
-    ),
-  overview: (days = 7) => request<{ success: boolean; data: any }>('/api/analytics/overview', { params: { days } }),
-};
+
 
 // ── Tabdeal Management ──────────────────────────────────────────────
 export const telemetryApi = {

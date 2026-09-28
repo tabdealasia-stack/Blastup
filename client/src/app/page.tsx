@@ -1,4 +1,4 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import { ArrowRight, Server, ShieldCheck, Zap, Code, LayoutDashboard, Database, Webhook, Key, Lock, CheckCircle2, Building, ShoppingBag, Utensils, Plane } from 'lucide-react';
@@ -229,7 +229,7 @@ export default function Home() {
                 </div>
                 <pre className="text-gray-300">
 <span className="text-rose-400">POST</span> /api/notifications/event
-<span className="text-gray-500">Host:</span> api.tabdeal.com
+<span className="text-gray-500">Host:</span> api.tabdealdigital.in
 <span className="text-gray-500">Authorization:</span> Bearer YOUR_API_KEY
 <span className="text-gray-500">Content-Type:</span> application/json
 
