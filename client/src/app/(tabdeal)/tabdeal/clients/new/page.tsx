@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -22,6 +22,7 @@ export default function CreateClientPage() {
     categoryId: '',
     email: '',
     whatsappNumber: '',
+    website: '',
   });
 
   const { data: categoriesData, isLoading: loadingCategories } = useSWR(
@@ -51,6 +52,7 @@ export default function CreateClientPage() {
         categoryId: formData.categoryId,
         email: formData.email || undefined,
         whatsappNumber: formData.whatsappNumber || undefined,
+        website: formData.website || undefined,
       });
 
       // Instead of redirecting, show the credential handover state
@@ -70,7 +72,7 @@ export default function CreateClientPage() {
   const categories = categoriesData?.data?.filter((c: any) => c.active) || [];
 
   if (successData) {
-    return <CredentialHandover successData={successData} />;
+    return <CredentialHandover successData={successData} setSuccessData={setSuccessData} />;
   }
 
   return (
@@ -154,6 +156,16 @@ export default function CreateClientPage() {
                     />
                     <p className="text-xs text-gray-500 mt-1.5">Include country code without plus sign.</p>
                   </div>
+                </div>
+
+                <div>
+                  <Input
+                    label="Website (Optional)"
+                    type="url"
+                    placeholder="https://business.com"
+                    value={formData.website}
+                    onChange={(e) => setFormData(f => ({ ...f, website: e.target.value }))}
+                  />
                 </div>
               </div>
 
@@ -252,7 +264,7 @@ export default function CreateClientPage() {
   );
 }
 
-function CredentialHandover({ successData }: { successData: any }) {
+function CredentialHandover({ successData, setSuccessData }: { successData: any, setSuccessData: (d: any) => void }) {
   const router = useRouter();
   
   const [showPassword, setShowPassword] = useState(false);
@@ -267,11 +279,22 @@ function CredentialHandover({ successData }: { successData: any }) {
   };
 
   const handleCopyAll = () => {
-    const text = `TABDEAL BLASTUP
-Business: ${successData.businessName}
-Portal Username: ${successData.username}
-Portal Password: ${successData.password}
-API Key: ${successData.apiKey}`;
+    const text = `Blastup Client Credentials
+
+Business:
+${successData.businessName}
+
+Client ID:
+${successData.clientId || successData._id}
+
+Portal Username:
+${successData.username}
+
+Portal Password:
+${successData.password}
+
+API Key:
+${successData.apiKey}`;
 
     navigator.clipboard.writeText(text);
     setCopiedField('all');
@@ -290,7 +313,7 @@ API Key: ${successData.apiKey}`;
         <div>
           <h3 className="text-sm font-bold text-amber-800">Critical Security Notice</h3>
           <p className="text-sm text-amber-700 mt-1 leading-relaxed">
-            These credentials are shown only once. Save them securely before leaving this page. The system intentionally does not store plaintext passwords or raw API keys.
+            These credentials are shown only once. Save them securely before leaving this page. The API key is stored securely as a hash and cannot be retrieved later.
           </p>
         </div>
       </div>
@@ -304,6 +327,10 @@ API Key: ${successData.apiKey}`;
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Business</p>
               <h2 className="text-2xl font-bold text-gray-900">{successData.businessName}</h2>
               <p className="text-sm text-gray-500 mt-1 font-mono">Slug: {successData.slug} | ID: {successData.clientId || successData._id}</p>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-gray-600">Templates Provisioned: <span className="font-semibold text-gray-900">{successData.templatesProvisioned || 0}</span></div>
+              <div className="text-sm text-gray-600">WhatsApp Account: <span className="font-semibold text-gray-900">{successData.whatsappProvisioned ? 'Provisioned (Disconnected / Pending)' : 'Not Provisioned'}</span></div>
             </div>
           </div>
         </div>
@@ -321,7 +348,7 @@ API Key: ${successData.apiKey}`;
                 <code className="flex-1 block px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm font-mono text-gray-900">
                   {successData.username}
                 </code>
-                <Button variant="outline" onClick={() => handleCopy(successData.username, 'username')} className="shrink-0 px-3">
+                <Button type="button" variant="outline" onClick={() => handleCopy(successData.username, 'username')} className="shrink-0 px-3">
                   {copiedField === 'username' ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-gray-500" />}
                 </Button>
               </div>
@@ -333,10 +360,10 @@ API Key: ${successData.apiKey}`;
                 <code className="flex-1 block px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm font-mono text-gray-900 tracking-wider">
                   {showPassword ? successData.password : '••••••••••••••••'}
                 </code>
-                <Button variant="outline" onClick={() => setShowPassword(!showPassword)} className="shrink-0 px-3">
+                <Button type="button" variant="outline" onClick={() => setShowPassword(!showPassword)} className="shrink-0 px-3">
                   {showPassword ? <EyeOff className="w-4 h-4 text-gray-500" /> : <Eye className="w-4 h-4 text-gray-500" />}
                 </Button>
-                <Button variant="outline" onClick={() => handleCopy(successData.password, 'password')} className="shrink-0 px-3">
+                <Button type="button" variant="outline" onClick={() => handleCopy(successData.password, 'password')} className="shrink-0 px-3">
                   {copiedField === 'password' ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-gray-500" />}
                 </Button>
               </div>
@@ -357,10 +384,10 @@ API Key: ${successData.apiKey}`;
               <code className="flex-1 block px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-mono text-gray-900 break-all">
                 {showApiKey ? successData.apiKey : `${successData.apiKey.substring(0, 11)}${'•'.repeat(24)}`}
               </code>
-              <Button variant="outline" onClick={() => setShowApiKey(!showApiKey)} className="shrink-0 px-3 bg-white">
+              <Button type="button" variant="outline" onClick={() => setShowApiKey(!showApiKey)} className="shrink-0 px-3 bg-white">
                 {showApiKey ? <EyeOff className="w-4 h-4 text-gray-500" /> : <Eye className="w-4 h-4 text-gray-500" />}
               </Button>
-              <Button variant="outline" onClick={() => handleCopy(successData.apiKey, 'apikey')} className="shrink-0 px-3 bg-white">
+              <Button type="button" variant="outline" onClick={() => handleCopy(successData.apiKey, 'apikey')} className="shrink-0 px-3 bg-white">
                 {copiedField === 'apikey' ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-gray-500" />}
               </Button>
             </div>
@@ -371,7 +398,7 @@ API Key: ${successData.apiKey}`;
         </div>
         
         <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
-          <Button variant="outline" onClick={handleCopyAll} className="bg-white">
+          <Button type="button" variant="outline" onClick={handleCopyAll} className="bg-white">
             {copiedField === 'all' ? (
               <><Check className="w-4 h-4 mr-2 text-emerald-600" /> Copied All Credentials</>
             ) : (
@@ -383,16 +410,18 @@ API Key: ${successData.apiKey}`;
 
       <div className="pt-6 flex justify-between items-center">
         <Button
+          type="button"
           variant="secondary"
-          onClick={() => router.push('/tabdeal/clients')}
+          onClick={() => setSuccessData(null)}
         >
-          Back to Clients
+          Create Another Client
         </Button>
         <Button
+          type="button"
           variant="primary"
           onClick={() => router.push(`/tabdeal/clients/${successData.clientId || successData._id}`)}
         >
-          Continue to Client Dashboard
+          Open Client 360
         </Button>
       </div>
     </div>
