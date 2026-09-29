@@ -109,22 +109,4 @@ export async function updateClientTemplate(req: Request, res: Response, next: Ne
   }
 }
 
-export async function getClientApiKeys(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { clientId } = req.params;
-    
-    const client = await Client.findById(clientId);
-    if (!client) throw Boom.notFound('Client not found');
 
-    const { ApiKey } = await import('../../models/ApiKey');
-    
-    // Only return safe metadata
-    const apiKeys = await ApiKey.find({ clientId: client._id })
-      .select('_id name status lastUsedAt createdAt updatedAt')
-      .sort({ createdAt: -1 });
-
-    res.json({ success: true, data: apiKeys });
-  } catch (err) {
-    next(err);
-  }
-}

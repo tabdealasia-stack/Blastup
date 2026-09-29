@@ -67,8 +67,12 @@ router.get('/client-templates', clientTemplateController.getClientTemplates);
 router.post('/client-templates', validate(clientTemplateController.createClientTemplateSchema), clientTemplateController.createClientTemplate);
 router.patch('/client-templates/:id', validate(clientTemplateController.updateClientTemplateSchema), clientTemplateController.updateClientTemplate);
 
+import * as clientApiKeyController from '../controllers/tabdeal/client-apikey.controller';
+
 // API Keys (Superadmin visibility)
-router.get('/clients/:clientId/api-keys', clientTemplateController.getClientApiKeys);
+router.get('/clients/:clientId/api-keys', clientApiKeyController.getClientApiKeys);
+router.post('/clients/:clientId/api-keys', clientApiKeyController.createClientApiKey);
+router.delete('/clients/:clientId/api-keys/:keyId', clientApiKeyController.deleteClientApiKey);
 
 // Dashboard Metrics
 router.get('/dashboard-metrics', logController.getDashboardMetrics);
