@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import useSWR from 'swr';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -12,6 +12,8 @@ import toast from 'react-hot-toast';
 
 export function ClientWhatsAppSection({ clientId, initialWhatsapp }: { clientId: string, initialWhatsapp: any }) {
   const [isProvisioning, setIsProvisioning] = useState(false);
+  const [showProvisionConfirm, setShowProvisionConfirm] = useState(false);
+  
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [showReconnectConfirm, setShowReconnectConfirm] = useState(false);
 
@@ -40,12 +42,11 @@ export function ClientWhatsAppSection({ clientId, initialWhatsapp }: { clientId:
   );
 
   const handleProvision = async () => {
-    if (!window.confirm('Are you sure you want to provision and initialize a WhatsApp instance for this client?')) return;
-    
     setIsProvisioning(true);
     try {
       await tabdealApi.provisionClientWhatsApp(clientId);
       toast.success('WhatsApp instance provisioned successfully.');
+      setShowProvisionConfirm(false);
       refreshStatus();
       refreshQR();
     } catch (err: any) {
@@ -96,13 +97,42 @@ export function ClientWhatsAppSection({ clientId, initialWhatsapp }: { clientId:
         <div className="flex-1 flex flex-col items-center justify-center py-6 text-center">
           <Smartphone className="w-8 h-8 text-gray-300 mb-3" />
           <p className="text-sm text-gray-500 mb-4 px-4">No dedicated WhatsApp Baileys container has been provisioned for this client.</p>
-          <Button 
-            onClick={handleProvision} 
-            isLoading={isProvisioning}
-            variant="primary"
-          >
-            Provision Container
-          </Button>
+          
+          {showProvisionConfirm ? (
+            <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 text-left w-full">
+              <h4 className="text-sm font-bold text-amber-800 flex items-center gap-2 mb-2">
+                <AlertTriangle className="w-4 h-4" /> Provision WhatsApp for this client?
+              </h4>
+              <p className="text-xs text-amber-700 mb-4 leading-relaxed">
+                Provisioning initializes the client's WhatsApp account infrastructure.
+              </p>
+              <div className="flex gap-2">
+                <Button 
+                  variant="secondary" 
+                  className="flex-1 bg-white"
+                  onClick={() => setShowProvisionConfirm(false)}
+                  disabled={isProvisioning}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="primary" 
+                  className="flex-1"
+                  onClick={handleProvision}
+                  isLoading={isProvisioning}
+                >
+                  Confirm Provision
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button 
+              onClick={() => setShowProvisionConfirm(true)} 
+              variant="primary"
+            >
+              Provision Container
+            </Button>
+          )}
         </div>
       ) : (
         <div className="flex-1 flex flex-col space-y-5">
@@ -129,24 +159,19 @@ export function ClientWhatsAppSection({ clientId, initialWhatsapp }: { clientId:
             </div>
           )}
 
-          <div className="mt-auto pt-4 flex flex-col sm:flex-row justify-end gap-3 border-t border-gray-100">
-            <Button 
-              variant="outline" 
-              onClick={() => { refreshStatus(); refreshQR(); }}
-              className="text-sm bg-white"
-            >
-              <RefreshCw className="w-4 h-4 mr-1.5 text-gray-500" />
-              Refresh
-            </Button>
-            
+          <div className="mt-auto pt-4 flex flex-col items-end gap-3 border-t border-gray-100">
             {showReconnectConfirm ? (
-              <div className="flex flex-col sm:flex-row items-center gap-2 bg-rose-50 p-2.5 rounded-lg border border-rose-200">
-                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 hidden sm:block" />
-                <span className="text-xs text-rose-700 font-medium whitespace-nowrap mr-2">Restart Container?</span>
-                <div className="flex gap-2 w-full sm:w-auto">
+              <div className="bg-rose-50 p-4 rounded-lg border border-rose-200 w-full text-left">
+                <h4 className="text-sm font-bold text-rose-800 flex items-center gap-2 mb-2">
+                  <AlertTriangle className="w-4 h-4" /> Reconnect WhatsApp
+                </h4>
+                <p className="text-xs text-rose-700 mb-4 leading-relaxed">
+                  Reconnect will restart the existing WhatsApp connection lifecycle. It will not create a new client or API key.
+                </p>
+                <div className="flex gap-2">
                   <Button 
                     variant="secondary" 
-                    className="text-xs h-8 flex-1 sm:flex-none border-rose-200 bg-white hover:bg-rose-100 text-rose-700"
+                    className="flex-1 bg-white border-rose-200 hover:bg-rose-100 text-rose-700"
                     onClick={() => setShowReconnectConfirm(false)}
                     disabled={isReconnecting}
                   >
@@ -154,22 +179,33 @@ export function ClientWhatsAppSection({ clientId, initialWhatsapp }: { clientId:
                   </Button>
                   <Button 
                     variant="primary" 
-                    className="bg-rose-600 hover:bg-rose-700 text-white text-xs h-8 flex-1 sm:flex-none border-none shadow-sm"
+                    className="flex-1 bg-rose-600 hover:bg-rose-700 border-none shadow-sm text-white"
                     onClick={handleReconnect}
                     isLoading={isReconnecting}
                   >
-                    Confirm
+                    Confirm Reconnect
                   </Button>
                 </div>
               </div>
             ) : (
-              <Button 
-                variant="outline" 
-                onClick={() => setShowReconnectConfirm(true)}
-                className="text-sm text-rose-600 hover:text-rose-700 border-rose-200 hover:bg-rose-50 bg-white"
-              >
-                Restart Container
-              </Button>
+              <div className="flex flex-row justify-end gap-3 w-full">
+                <Button 
+                  variant="outline" 
+                  onClick={() => { refreshStatus(); refreshQR(); }}
+                  className="text-sm bg-white"
+                >
+                  <RefreshCw className="w-4 h-4 mr-1.5 text-gray-500" />
+                  Refresh
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowReconnectConfirm(true)}
+                  className="text-sm text-rose-600 hover:text-rose-700 border-rose-200 hover:bg-rose-50 bg-white"
+                >
+                  Restart Container
+                </Button>
+              </div>
             )}
           </div>
         </div>
