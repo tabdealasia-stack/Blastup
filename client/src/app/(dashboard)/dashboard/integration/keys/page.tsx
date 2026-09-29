@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import useSWR from 'swr';
@@ -26,6 +26,8 @@ export default function ApiKeysPage() {
     e.preventDefault();
     if (!newKeyName.trim()) return;
     
+    if (!window.confirm('Generate a new API key?\n\nThe new key will be displayed once. Save it securely.')) return;
+
     setIsCreating(true);
     setGeneratedKey(null);
     setShowKey(false);

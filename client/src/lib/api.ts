@@ -252,7 +252,12 @@ export const tabdealApi = {
   // Client Templates
   getClientTemplates: (params?: any) => request<{ success: boolean; data: any[]; pagination: any }>('/api/tabdeal/client-templates', { params }),
 
-  // Logs & Diagnostics
+  // API Keys
+    getClientApiKeys: (clientId: string) => request<{ success: boolean; data: any[] }>(`/api/tabdeal/clients/${clientId}/api-keys`),
+    createClientApiKey: (clientId: string, name: string) => request<{ success: boolean; message: string; data: any }>(`/api/tabdeal/clients/${clientId}/api-keys`, { method: 'POST', body: JSON.stringify({ name }) }),
+    deleteClientApiKey: (clientId: string, keyId: string) => request<{ success: boolean }>(`/api/tabdeal/clients/${clientId}/api-keys/${keyId}`, { method: 'DELETE' }),
+
+    // Logs & Diagnostics
   getMessageLogs: (params?: any) => request<{ success: boolean; data: any[]; pagination: any }>('/api/tabdeal/message-logs', { params }),
   getMessageLog: (id: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/message-logs/${id}`),
   getEventLogs: (params?: any) => request<{ success: boolean; data: any[]; pagination: any }>('/api/tabdeal/event-logs', { params }),

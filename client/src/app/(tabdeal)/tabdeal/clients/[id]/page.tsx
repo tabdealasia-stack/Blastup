@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { ErrorState, LoadingState } from '@/components/ui/States';
 import { tabdealApi } from '@/lib/api';
 import { ClientWhatsAppSection } from './ClientWhatsAppSection';
+import { ClientApiKeysSection } from './ClientApiKeysSection';
 import { ArrowLeft, Clock, Calendar, CheckCircle2, XCircle, AlertCircle, Send, Webhook } from 'lucide-react';
 import Link from 'next/link';
 
