@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import useSWR from 'swr';
@@ -62,17 +62,24 @@ export function ClientTemplatesSection({ clientId, totalTemplates = 0, activeTem
     }
     setIsAssigning(true);
     try {
-      const vars = assignCustomVariables
+      const rawVars = assignCustomVariables
         .split('\n')
         .map(v => v.trim())
-        .filter(v => v.includes('=') && v.length > 0);
+        .filter(v => v.length > 0);
+        
+      const hasMalformed = rawVars.some(v => !v.includes('='));
+      if (hasMalformed) {
+        toast.error('Invalid variable format. Each variable must use key=value.');
+        setIsAssigning(false);
+        return;
+      }
 
       await tabdealApi.createClientTemplate({
         clientId,
         templateId: assignTemplateId,
         enabled: assignEnabled,
         customMessage: assignCustomMessage.trim() || undefined,
-        customVariables: vars.length > 0 ? vars : undefined,
+        customVariables: rawVars.length > 0 ? rawVars : undefined,
       });
       
       toast.success('Template assigned successfully.');
@@ -101,15 +108,22 @@ export function ClientTemplatesSection({ clientId, totalTemplates = 0, activeTem
     if (!editingId) return;
     setIsSaving(true);
     try {
-      const vars = editCustomVariables
+      const rawVars = editCustomVariables
         .split('\n')
         .map(v => v.trim())
-        .filter(v => v.includes('=') && v.length > 0);
+        .filter(v => v.length > 0);
+        
+      const hasMalformed = rawVars.some(v => !v.includes('='));
+      if (hasMalformed) {
+        toast.error('Invalid variable format. Each variable must use key=value.');
+        setIsSaving(false);
+        return;
+      }
 
       await tabdealApi.updateClientTemplate(editingId, {
         enabled: editEnabled,
-        customMessage: editCustomMessage.trim() || undefined,
-        customVariables: vars.length > 0 ? vars : [],
+        customMessage: editCustomMessage.trim() || "",
+        customVariables: rawVars.length > 0 ? rawVars : [],
       });
       
       toast.success('Template updated successfully.');
@@ -147,8 +161,8 @@ export function ClientTemplatesSection({ clientId, totalTemplates = 0, activeTem
           </h4>
           <form onSubmit={handleAssign} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Master Notification Template</label>
-              <select 
+              <label htmlFor="assignTemplateId" className="block text-xs font-semibold text-gray-700 mb-1">Master Notification Template</label>
+              <select id="assignTemplateId" 
                 className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white px-3 py-2 border"
                 value={assignTemplateId}
                 onChange={(e) => setAssignTemplateId(e.target.value)}
@@ -175,24 +189,16 @@ export function ClientTemplatesSection({ clientId, totalTemplates = 0, activeTem
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Custom Message Override</label>
-              <textarea
-                className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border"
-                rows={3}
-                placeholder="Leave empty to use the Master Template message."
-                value={assignCustomMessage}
+              <label htmlFor="assignCustomMessage" className="block text-xs font-semibold text-gray-700 mb-1">Custom Message Override</label>
+              <textarea id="assignCustomMessage" className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border" rows={3} placeholder="Leave empty to use the Master Template message." value={assignCustomMessage}
                 onChange={(e) => setAssignCustomMessage(e.target.value)}
               />
               <p className="text-xs text-gray-500 mt-1">This will completely replace the underlying Master Template message when dispatched.</p>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Custom Variables</label>
-              <textarea
-                className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono px-3 py-2 border"
-                rows={3}
-                placeholder={`customer_name=John\ngreeting=Hello VIP`}
-                value={assignCustomVariables}
+              <label htmlFor="assignCustomVariables" className="block text-xs font-semibold text-gray-700 mb-1">Custom Variables</label>
+              <textarea id="assignCustomVariables" className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono px-3 py-2 border" rows={3} placeholder={`customer_name=John\ngreeting=Hello VIP`} value={assignCustomVariables}
                 onChange={(e) => setAssignCustomVariables(e.target.value)}
               />
               <p className="text-xs text-gray-500 mt-1">One variable mapping per line in <code className="bg-gray-100 px-1 rounded">key=value</code> format.</p>
@@ -240,24 +246,16 @@ export function ClientTemplatesSection({ clientId, totalTemplates = 0, activeTem
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Custom Message Override</label>
-              <textarea
-                className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border"
-                rows={3}
-                placeholder="Leave empty to use the Master Template message."
-                value={editCustomMessage}
+              <label htmlFor="editCustomMessage" className="block text-xs font-semibold text-gray-700 mb-1">Custom Message Override</label>
+              <textarea id="editCustomMessage" className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border" rows={3} placeholder="Leave empty to use the Master Template message." value={editCustomMessage}
                 onChange={(e) => setEditCustomMessage(e.target.value)}
               />
               <p className="text-xs text-gray-500 mt-1">This will completely replace the underlying Master Template message when dispatched.</p>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Custom Variables</label>
-              <textarea
-                className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono px-3 py-2 border"
-                rows={3}
-                placeholder={`customer_name=John\ngreeting=Hello VIP`}
-                value={editCustomVariables}
+              <label htmlFor="editCustomVariables" className="block text-xs font-semibold text-gray-700 mb-1">Custom Variables</label>
+              <textarea id="editCustomVariables" className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono px-3 py-2 border" rows={3} placeholder={`customer_name=John\ngreeting=Hello VIP`} value={editCustomVariables}
                 onChange={(e) => setEditCustomVariables(e.target.value)}
               />
               <p className="text-xs text-gray-500 mt-1">One variable mapping per line in <code className="bg-gray-100 px-1 rounded">key=value</code> format.</p>
@@ -336,3 +334,5 @@ export function ClientTemplatesSection({ clientId, totalTemplates = 0, activeTem
     </Card>
   );
 }
+
+
