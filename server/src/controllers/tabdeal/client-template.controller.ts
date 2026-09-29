@@ -4,6 +4,8 @@ import { Client } from '../../models/Client';
 import { NotificationTemplate } from '../../models/NotificationTemplate';
 import Boom from '@hapi/boom';
 import { z } from 'zod';
+import { AuthRequest } from '../../middleware/auth';
+import { writeLog } from '../../services/log.service';
 import mongoose from 'mongoose';
 
 export const createClientTemplateSchema = z.object({
@@ -55,7 +57,7 @@ export async function getClientTemplates(req: Request, res: Response, next: Next
   }
 }
 
-export async function createClientTemplate(req: Request, res: Response, next: NextFunction) {
+export async function createClientTemplate(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const data = req.body;
 
@@ -85,13 +87,30 @@ export async function createClientTemplate(req: Request, res: Response, next: Ne
       customVariables: data.customVariables || [],
     });
 
+    if (req.user?.id) {
+      await writeLog({
+        level: 'info',
+        category: 'system',
+        message: `ClientTemplate assigned for Client ${client._id}`,
+        meta: {
+          clientId: client._id.toString(),
+          templateId: template._id.toString(),
+          clientTemplateId: clientTemplate._id.toString(),
+          enabled: clientTemplate.enabled,
+          hasCustomMessage: !!clientTemplate.customMessage,
+        },
+        userId: req.user.id,
+        ip: req.ip || req.ips[0] || '127.0.0.1',
+      });
+    }
+
     res.status(201).json({ success: true, data: clientTemplate });
   } catch (err) {
     next(err);
   }
 }
 
-export async function updateClientTemplate(req: Request, res: Response, next: NextFunction) {
+export async function updateClientTemplate(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const data = req.body;
     const clientTemplate = await ClientTemplate.findById(req.params.id);
@@ -102,6 +121,29 @@ export async function updateClientTemplate(req: Request, res: Response, next: Ne
     if (data.customVariables !== undefined) clientTemplate.customVariables = data.customVariables;
 
     await clientTemplate.save();
+
+    if (req.user?.id) {
+      const changedFields = [];
+      if (data.enabled !== undefined) changedFields.push('enabled');
+      if (data.customMessage !== undefined) changedFields.push('customMessage');
+      if (data.customVariables !== undefined) changedFields.push('customVariables');
+
+      await writeLog({
+        level: 'info',
+        category: 'system',
+        message: `ClientTemplate updated for Client ${clientTemplate.clientId}`,
+        meta: {
+          clientId: clientTemplate.clientId.toString(),
+          templateId: clientTemplate.templateId.toString(),
+          clientTemplateId: clientTemplate._id.toString(),
+          changedFields,
+          enabled: clientTemplate.enabled,
+          hasCustomMessage: !!clientTemplate.customMessage,
+        },
+        userId: req.user.id,
+        ip: req.ip || req.ips[0] || '127.0.0.1',
+      });
+    }
 
     res.json({ success: true, data: clientTemplate });
   } catch (err) {
