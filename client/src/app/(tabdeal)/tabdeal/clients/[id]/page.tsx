@@ -11,6 +11,7 @@ import { ErrorState, LoadingState } from '@/components/ui/States';
 import { tabdealApi } from '@/lib/api';
 import { ClientWhatsAppSection } from './ClientWhatsAppSection';
 import { ClientApiKeysSection } from './ClientApiKeysSection';
+import { ClientTemplatesSection } from './ClientTemplatesSection';
 import { ArrowLeft, Clock, Calendar, CheckCircle2, XCircle, AlertCircle, Send, Webhook } from 'lucide-react';
 import Link from 'next/link';
 
@@ -137,65 +138,7 @@ export default function ClientDetailPage() {
         <div className="lg:col-span-3 grid grid-cols-1 xl:grid-cols-2 gap-6">
           
           {/* Templates */}
-          <Card className="overflow-hidden flex flex-col">
-            <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-              <div>
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
-                  Assigned Templates
-                </h3>
-                <p className="text-xs text-gray-500 mt-0.5">{activeTemplates} of {totalTemplates} enabled</p>
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-x-auto">
-              {!client.templates || client.templates.length === 0 ? (
-                <div className="p-8 text-center text-sm text-gray-500 italic">No templates assigned.</div>
-              ) : (
-                <table className="min-w-full divide-y divide-gray-100">
-                  <thead className="bg-white">
-                    <tr>
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Template / Event</th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
-                      <th className="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Approval</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50 bg-white">
-                    {client.templates.map((ct: any) => {
-                      const template = ct.templateId;
-                      return (
-                        <tr key={ct._id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="px-5 py-3 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{template?.name || 'Unknown'}</div>
-                            <div className="text-xs font-mono text-gray-500 mt-0.5">{template?.event || 'Unknown'}</div>
-                          </td>
-                          <td className="px-5 py-3 whitespace-nowrap">
-                            <Badge variant={ct.enabled ? 'success' : 'gray'}>
-                              {ct.enabled ? 'Enabled' : 'Disabled'}
-                            </Badge>
-                          </td>
-                          <td className="px-5 py-3 whitespace-nowrap text-right">
-                            {template?.status === 'approved' ? (
-                              <span className="inline-flex items-center text-xs font-medium text-emerald-600">
-                                <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Approved
-                              </span>
-                            ) : template?.status === 'rejected' ? (
-                              <span className="inline-flex items-center text-xs font-medium text-rose-600">
-                                <XCircle className="w-3.5 h-3.5 mr-1" /> Rejected
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center text-xs font-medium text-amber-600">
-                                <AlertCircle className="w-3.5 h-3.5 mr-1" /> {template?.status || 'Pending'}
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </Card>
+            <ClientTemplatesSection clientId={client._id} totalTemplates={totalTemplates} activeTemplates={activeTemplates} />
 
           {/* API Keys */}
           <Card className="overflow-hidden flex flex-col">
@@ -314,3 +257,6 @@ export default function ClientDetailPage() {
     </div>
   );
 }
+
+
+

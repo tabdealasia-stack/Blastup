@@ -251,6 +251,8 @@ export const tabdealApi = {
 
   // Client Templates
   getClientTemplates: (params?: any) => request<{ success: boolean; data: any[]; pagination: any }>('/api/tabdeal/client-templates', { params }),
+  createClientTemplate: (data: any) => request<{ success: boolean; data: any }>('/api/tabdeal/client-templates', { method: 'POST', body: JSON.stringify(data) }),
+  updateClientTemplate: (id: string, data: any) => request<{ success: boolean; data: any }>(`/api/tabdeal/client-templates/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
   // API Keys
     getClientApiKeys: (clientId: string) => request<{ success: boolean; data: any[] }>(`/api/tabdeal/clients/${clientId}/api-keys`),
