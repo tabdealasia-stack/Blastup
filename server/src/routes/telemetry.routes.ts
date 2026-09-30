@@ -1,9 +1,9 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import { getClientEventLogs, getClientMessageLogs, getClientDashboardMetrics } from '../controllers/telemetry.controller';
 
 const router = Router();
-router.use(authenticate);
+
 
 /**
  * @swagger
@@ -14,7 +14,7 @@ router.use(authenticate);
  *     security:
  *       - cookieAuth: []
  */
-router.get('/event-logs', getClientEventLogs);
+router.get('/event-logs', authenticate, getClientEventLogs);
 
 /**
  * @swagger
@@ -25,7 +25,7 @@ router.get('/event-logs', getClientEventLogs);
  *     security:
  *       - cookieAuth: []
  */
-router.get('/message-logs', getClientMessageLogs);
+router.get('/message-logs', authenticate, getClientMessageLogs);
 
 /**
  * @swagger
@@ -36,6 +36,6 @@ router.get('/message-logs', getClientMessageLogs);
  *     security:
  *       - cookieAuth: []
  */
-router.get('/dashboard/metrics', getClientDashboardMetrics);
+router.get('/dashboard/metrics', authenticate, getClientDashboardMetrics);
 
 export default router;
