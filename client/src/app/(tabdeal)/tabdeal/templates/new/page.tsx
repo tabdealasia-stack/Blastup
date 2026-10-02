@@ -17,8 +17,8 @@ export default function NewTemplatePage() {
     event: '',
     categoryId: '',
     templatePackId: '',
+    description: '',
     message: '',
-    variables: '',
     active: true,
   });
   
@@ -47,20 +47,15 @@ export default function NewTemplatePage() {
     return packs.filter(p => p.categoryId?._id === formData.categoryId);
   }, [formData.categoryId, packs]);
 
-  const parsedVariables = useMemo(() => {
-    return formData.variables.split(',').map(v => v.trim()).filter(Boolean);
-  }, [formData.variables]);
-
   const usedVariables = useMemo(() => {
-    const regex = /\{\{([^}]+)\}\}/g;
-    const regex2 = /\{([^}]+)\}/g;
-    const matches1 = Array.from(formData.message.matchAll(regex)).map(m => m[1].trim());
-    const matches2 = Array.from(formData.message.matchAll(regex2)).map(m => m[1].trim());
-    return Array.from(new Set([...matches1, ...matches2]));
+    const regex = /\{+([^}]+?)\}+/g;
+    const matches = Array.from(formData.message.matchAll(regex)).map(m => m[1].trim());
+    return Array.from(new Set(matches));
   }, [formData.message]);
 
-  const missingVariables = usedVariables.filter(uv => !parsedVariables.includes(uv));
-  const unusedVariables = parsedVariables.filter(pv => !usedVariables.includes(pv));
+  const invalidVariables = useMemo(() => {
+    return usedVariables.filter(v => !/^[a-zA-Z0-9_]+$/.test(v));
+  }, [usedVariables]);
 
   const previewMessage = useMemo(() => {
     let msg = formData.message;
@@ -73,12 +68,16 @@ export default function NewTemplatePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (invalidVariables.length > 0) {
+      setError(`Invalid variables detected: ${invalidVariables.join(', ')}. Variables must contain only letters, numbers, and underscores.`);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
       const payload = {
         ...formData,
-        variables: parsedVariables,
+        variables: usedVariables,
       };
       
       const res = await tabdealApi.createTemplate(payload);
@@ -172,13 +171,12 @@ export default function NewTemplatePage() {
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#334155' }}>Variables (comma-separated)</label>
-              <input 
-                type="text" 
-                value={formData.variables} 
-                onChange={e => setFormData({ ...formData, variables: e.target.value })}
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontFamily: 'monospace', fontSize: '13px' }}
-                placeholder="customerName, bookingId, date"
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#334155' }}>Description / Purpose</label>
+              <textarea
+                value={formData.description}
+                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '60px', resize: 'vertical' }}
+                placeholder="Internal notes about when this template should be used."
               />
             </div>
 
@@ -193,16 +191,15 @@ export default function NewTemplatePage() {
               />
             </div>
 
-            {/* Validation Warnings */}
-            {missingVariables.length > 0 && (
-              <div style={{ padding: '12px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', marginBottom: '12px', color: '#92400e', fontSize: '13px' }}>
-                <strong>Warning:</strong> You used variables in the message that are not in the variables list: {missingVariables.join(', ')}
+            {/* Auto-derived Variables Notice */}
+            {invalidVariables.length > 0 && (
+              <div style={{ padding: '12px', background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '6px', marginBottom: '20px', color: '#b91c1c', fontSize: '13px' }}>
+                <strong>Error:</strong> The following variables have invalid syntax: {invalidVariables.join(', ')} (Only letters, numbers, and underscores are allowed).
               </div>
             )}
-            
-            {unusedVariables.length > 0 && (
-              <div style={{ padding: '12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '12px', color: '#475569', fontSize: '13px' }}>
-                <strong>Notice:</strong> Declared variables not found in the message: {unusedVariables.join(', ')}
+            {usedVariables.length > 0 && invalidVariables.length === 0 && (
+              <div style={{ padding: '12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '20px', color: '#475569', fontSize: '13px' }}>
+                <strong>Auto-detected Variables:</strong> {usedVariables.join(', ')}
               </div>
             )}
 

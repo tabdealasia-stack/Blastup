@@ -1,4 +1,4 @@
-﻿import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface INotificationTemplate extends Document {
   name: string;
@@ -8,6 +8,7 @@ export interface INotificationTemplate extends Document {
 
   event: string;
   message: string;
+  description?: string;
 
   variables: string[];
 
@@ -57,6 +58,12 @@ const notificationTemplateSchema = new Schema<INotificationTemplate>(
       required: true,
       trim: true,
       maxlength: 4000,
+    },
+
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 500,
     },
 
     variables: {

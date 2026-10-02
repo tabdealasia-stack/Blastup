@@ -8,11 +8,14 @@ import Boom from '@hapi/boom';
 import { z } from 'zod';
 import mongoose from 'mongoose';
 
+import { writeLog } from '../../services/log.service';
+
 export const createTemplateSchema = z.object({
   name: z.string().min(1).max(150),
   event: z.string().min(1).max(100).regex(/^[a-z0-9_.]+$/, 'Event must contain only lowercase letters, numbers, underscores, and dots (e.g., booking.confirmed)'),
   categoryId: z.string(),
   templatePackId: z.string(),
+  description: z.string().max(500).optional(),
   message: z.string().min(1).max(4000),
   variables: z.array(z.string()).default([]),
   active: z.boolean().optional(),
@@ -23,6 +26,7 @@ export const updateTemplateSchema = z.object({
   event: z.string().min(1).max(100).regex(/^[a-z0-9_.]+$/).optional(),
   categoryId: z.string().optional(),
   templatePackId: z.string().optional(),
+  description: z.string().max(500).optional(),
   message: z.string().min(1).max(4000).optional(),
   variables: z.array(z.string()).optional(),
   active: z.boolean().optional(),
@@ -118,9 +122,25 @@ export async function createTemplate(req: Request, res: Response, next: NextFunc
       slug,
       templatePackId: pack._id,
       event: normalizedEvent,
+      description: data.description,
       message: data.message,
       variables: data.variables || [],
       active: data.active !== undefined ? data.active : true,
+    });
+
+    await writeLog({
+      level: 'info',
+      category: 'system',
+      message: 'Master template created',
+      userId: (req as any).user?.id,
+      ip: req.ip,
+      meta: {
+        templateId: template._id,
+        templatePackId: pack._id,
+        categoryId: pack.categoryId,
+        event: normalizedEvent,
+        active: template.active
+      }
     });
 
     res.status(201).json({ success: true, data: template });
