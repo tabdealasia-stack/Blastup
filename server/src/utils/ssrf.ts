@@ -9,14 +9,21 @@ export class SSRFError extends Error {
   }
 }
 
+export interface ValidatedWebhookUrl {
+  hostname: string;
+  address: string;
+  family: number;
+  protocol: string;
+}
+
 /**
  * Validates a URL against SSRF vulnerabilities by checking its scheme and resolving its IP address.
  * It rejects localhost, link-local, loopback, private IPv4, and metadata IP addresses.
  * 
  * @param urlString The URL to validate
- * @returns The resolved IP address if the URL is safe, throws SSRFError otherwise.
+ * @returns The resolved IP address and family if the URL is safe, throws SSRFError otherwise.
  */
-export async function validateWebhookUrl(urlString: string): Promise<string> {
+export async function validateWebhookUrl(urlString: string): Promise<ValidatedWebhookUrl> {
   let url: URL;
   try {
     url = new URL(urlString);
@@ -25,8 +32,6 @@ export async function validateWebhookUrl(urlString: string): Promise<string> {
   }
 
   // Only allow HTTPS in production-like logic, but we might allow HTTP for local testing.
-  // The user prompt says: "Webhook configuration must require HTTPS. Do not allow HTTP production webhook URLs."
-  // Wait, if it's production. Let's enforce HTTPS strictly.
   if (url.protocol !== 'https:') {
     throw new SSRFError('Webhook URL must use HTTPS');
   }
@@ -34,26 +39,33 @@ export async function validateWebhookUrl(urlString: string): Promise<string> {
   const hostname = url.hostname;
 
   // Resolve hostname to IP
-  let ips: string[] = [];
+  let records: any[] = [];
   try {
-    const records = await dns.lookup(hostname, { all: true });
-    ips = records.map(r => r.address);
+    records = await dns.lookup(hostname, { all: true });
   } catch (err) {
     throw new SSRFError('Failed to resolve hostname');
   }
 
-  if (ips.length === 0) {
+  if (records.length === 0) {
     throw new SSRFError('No IP address found for hostname');
   }
 
-  // Check the first resolved IP
-  const ip = ips[0];
-
-  if (!isSafeIp(ip)) {
-    throw new SSRFError('Resolved IP address is prohibited for webhook delivery');
+  // Check all resolved IPs and reject if any are unsafe to prevent fallback issues
+  for (const record of records) {
+    if (!isSafeIp(record.address)) {
+      throw new SSRFError(`Resolved IP address ${record.address} is prohibited for webhook delivery`);
+    }
   }
 
-  return ip;
+  // We use the first safe IP
+  const selected = records[0];
+
+  return {
+    hostname,
+    address: selected.address,
+    family: selected.family,
+    protocol: url.protocol
+  };
 }
 
 /**

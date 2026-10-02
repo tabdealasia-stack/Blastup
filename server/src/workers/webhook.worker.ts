@@ -93,7 +93,7 @@ async function processDelivery(deliveryLog: any) {
     }
 
     // SSRF Validation just before delivery
-    const safeIp = await validateWebhookUrl(webhook.url);
+    const safeInfo = await validateWebhookUrl(webhook.url);
 
     // Decrypt secret
     const secret = decryptWebhookSecret(webhook.encryptedSecret);
@@ -114,7 +114,7 @@ async function processDelivery(deliveryLog: any) {
     const signature = generateWebhookSignature(secret, timestamp, payloadString);
 
     // Delivery request
-    httpStatus = await sendWebhookRequest(webhook.url, payloadString, deliveryLog.event, deliveryLog._id.toString(), timestamp, signature);
+    httpStatus = await sendWebhookRequest(webhook.url, payloadString, deliveryLog.event, deliveryLog._id.toString(), timestamp, signature, safeInfo);
 
     if (httpStatus >= 200 && httpStatus < 300) {
       // Success
@@ -152,7 +152,7 @@ async function processDelivery(deliveryLog: any) {
   await deliveryLog.save();
 }
 
-function sendWebhookRequest(url: string, payload: string, eventName: string, deliveryId: string, timestamp: string, signature: string): Promise<number> {
+function sendWebhookRequest(url: string, payload: string, eventName: string, deliveryId: string, timestamp: string, signature: string, safeInfo: any): Promise<number> {
   return new Promise((resolve, reject) => {
     const urlObj = new URL(url);
     const options = {
@@ -168,7 +168,13 @@ function sendWebhookRequest(url: string, payload: string, eventName: string, del
         'X-Blastup-Delivery': deliveryId,
         'X-Blastup-Timestamp': timestamp,
         'X-Blastup-Signature': signature,
+        'Host': urlObj.host,
       },
+      lookup: (hostname: string, opts: any, callback: any) => {
+        // Pin the connection to the already-validated IP address to prevent DNS rebinding
+        if (opts && opts.all) { callback(null, [{ address: safeInfo.address, family: safeInfo.family }]); } else { callback(null, safeInfo.address, safeInfo.family); }
+      },
+      servername: urlObj.hostname,
     };
 
     const req = https.request(options, (res) => {
