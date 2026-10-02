@@ -5,6 +5,7 @@ import ClientTemplate from '../models/ClientTemplate';
 import { NotificationTemplate } from '../models/NotificationTemplate';
 import { WhatsAppAccount } from '../models/WhatsAppAccount';
 import { NotificationEventLog } from '../models/NotificationEventLog';
+import { enqueueWebhookEvent } from './webhook.service';
 
 export interface NotificationEventParams {
   clientId: string;
@@ -80,6 +81,12 @@ export async function sendNotificationEvent(params: NotificationEventParams) {
   }).select('_id');
 
   if (!template) {
+    enqueueWebhookEvent(client._id.toString(), 'notification.skipped', normalizedEventId, {
+      eventId: normalizedEventId,
+      recipient: to,
+      reason: 'No active template configured for this event',
+    }).catch(() => {});
+
     return {
       success: true,
       status: 'skipped',
@@ -144,6 +151,12 @@ export async function sendNotificationEvent(params: NotificationEventParams) {
       throw error;
     }
   }
+
+  enqueueWebhookEvent(client._id.toString(), 'notification.accepted', normalizedEventId, {
+    eventId: normalizedEventId,
+    recipient: to,
+    variables,
+  }).catch(() => {});
 
   return {
     success: true,

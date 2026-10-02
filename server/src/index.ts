@@ -76,6 +76,8 @@ async function bootstrap() {
       logger.info(`${signal} received, shutting down gracefully...`);
         const { stopOutboxWorker } = await import('./services/outbox.worker');
         stopOutboxWorker();
+        const { stopWebhookWorker } = await import('./workers/webhook.worker');
+        stopWebhookWorker();
 
       server.close(async () => {
         try {

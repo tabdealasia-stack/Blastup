@@ -17,6 +17,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   JWT_EXPIRES_IN: z.string().default('24h'),
   COOKIE_SECRET: z.string().min(32, 'COOKIE_SECRET must be at least 32 characters'),
+  WEBHOOK_ENCRYPTION_KEY: z.string().min(32, 'WEBHOOK_ENCRYPTION_KEY must be at least 32 characters').optional().default('development_webhook_secret_key_32'),
   BCRYPT_ROUNDS: z.string().default('12').transform(Number),
   // Admin seed
   ADMIN_USERNAME: z.string().min(3, 'ADMIN_USERNAME is required'),

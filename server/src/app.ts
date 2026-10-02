@@ -1,4 +1,5 @@
 import { initOutboxWorker } from './services/outbox.worker';
+import { initWebhookWorker } from './workers/webhook.worker';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
@@ -19,6 +20,7 @@ import notificationEventRoutes from './routes/notification-event.routes';
 import tabdealRoutes from './routes/tabdeal.routes';
 import telemetryRoutes from './routes/telemetry.routes';
 import clientTemplateRoutes from './routes/client-template.routes';
+import webhookRoutes from './routes/webhook.routes';
 
 import { initCampaignScheduler } from './services/campaignScheduler';
 import { initClientCleanupWorker } from './workers/clientCleanupWorker';
@@ -36,6 +38,7 @@ export function createApp(): express.Application {
   initCampaignScheduler();
   initClientCleanupWorker();
   initOutboxWorker();
+  initWebhookWorker();
   setInterval(() => processDueReminders().catch(() => {}), 30_000).unref();
   normalizeExistingDatabase().catch(() => { });
 
@@ -168,6 +171,7 @@ export function createApp(): express.Application {
 
   
   app.use('/api', telemetryRoutes);
+  app.use('/api', webhookRoutes);
 
   app.use('/api/client-templates', clientTemplateRoutes);
 

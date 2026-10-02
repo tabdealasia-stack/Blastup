@@ -9,6 +9,7 @@ import { WhatsAppAccount } from '../models/WhatsAppAccount';
 import { MessageLog } from '../models/MessageLog';
 import * as messageService from './message.service';
 import Boom from '@hapi/boom';
+import { enqueueWebhookEvent } from './webhook.service';
 
 let workerInterval: NodeJS.Timeout | null = null;
 let isShuttingDown = false;
