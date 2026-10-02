@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { createContext, useContext, useEffect, ReactNode } from 'react';
 import useSWR from 'swr';
 import { useRouter, usePathname } from 'next/navigation';
@@ -16,11 +16,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   
-  const { data: user, error, isLoading, mutate } = useSWR<User | null>('/api/auth/me', {
+  const { data: responseData, error, isLoading, mutate } = useSWR<{ user: User } | null>('/api/auth/me', {
     shouldRetryOnError: false,
   });
 
-  const loading = isLoading && user === undefined;
+  const user = responseData?.user || null;
+  const loading = isLoading && responseData === undefined;
 
   useEffect(() => {
     if (loading) return;
