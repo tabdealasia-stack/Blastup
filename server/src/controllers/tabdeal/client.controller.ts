@@ -10,6 +10,7 @@ import { ApiKey } from '../../models/ApiKey';
 import { provisionWhatsAppInstance } from '../../services/whatsapp.service';
 import { hashToken } from '../../utils/crypto';
 import Boom from '@hapi/boom';
+import { writeLog } from '../../services/log.service';
 import crypto from 'crypto';
 import { z } from 'zod';
 import mongoose from 'mongoose';
@@ -17,6 +18,7 @@ import mongoose from 'mongoose';
 export const createClientSchema = z.object({
   businessName: z.string().min(1).max(150),
   categoryId: z.string().min(1),
+  phone: z.string().max(20).optional().nullable(),
   whatsappNumber: z.string().max(20).optional().nullable(),
   website: z.string().optional().nullable(),
   email: z.string().email().optional().nullable(),
@@ -27,6 +29,7 @@ export const createClientSchema = z.object({
 export const updateClientSchema = z.object({
   businessName: z.string().min(1).max(150).optional(),
   categoryId: z.string().min(1).optional(),
+  phone: z.string().max(20).optional().nullable(),
   whatsappNumber: z.string().max(20).optional().nullable(),
   website: z.string().optional().nullable(),
   email: z.string().email().optional().nullable(),
@@ -54,7 +57,7 @@ export async function getClients(req: Request, res: Response, next: NextFunction
     if (status) query.status = status;
 
     const skip = (Number(page) - 1) * Number(limit);
-    
+
     const clients = await Client.find(query)
       .populate('categoryId', 'name slug')
       .sort({ createdAt: -1 })
@@ -66,7 +69,7 @@ export async function getClients(req: Request, res: Response, next: NextFunction
     const result = await Promise.all(clients.map(async (client) => {
       const waAccount = await WhatsAppAccount.findOne({ clientId: client._id });
       const templateCount = await ClientTemplate.countDocuments({ clientId: client._id, enabled: true });
-      
+
       return {
         _id: client._id,
         businessName: client.businessName,
@@ -120,12 +123,12 @@ export async function createClient(req: Request, res: Response, next: NextFuncti
     }
 
     const slug = data.businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    
+
     const existingClient = await Client.findOne({ slug });
     if (existingClient) {
       throw Boom.conflict(`A client with slug '${slug}' already exists`);
     }
-    
+
     if (data.email) {
       const existingEmail = await Client.findOne({ email: data.email });
       if (existingEmail) throw Boom.conflict(`A client with email '${data.email}' already exists`);
@@ -151,7 +154,8 @@ export async function createClient(req: Request, res: Response, next: NextFuncti
         categoryId: category._id,
         templatePackId: pack._id,
         email: data.email?.trim().toLowerCase() || null,
-        phone: data.whatsappNumber?.trim() || null,
+        phone: data.phone?.trim() || null,
+        whatsappNumber: data.whatsappNumber?.trim() || null,
         status: 'active',
         settings: {
           timezone: data.timezone,
@@ -242,7 +246,7 @@ export async function getClient(req: Request, res: Response, next: NextFunction)
     const waAccount = await WhatsAppAccount.findOne({ clientId: client._id });
     const templates = await ClientTemplate.find({ clientId: client._id }).populate('templateId');
     const apiKeys = await ApiKey.find({ clientId: client._id }).select('-keyHash -key');
-    
+
     res.json({
       success: true,
       data: {
@@ -268,8 +272,51 @@ export async function updateClient(req: Request, res: Response, next: NextFuncti
       if (!category) throw Boom.badRequest('Category not found');
     }
 
-    Object.assign(client, data);
-    await client.save();
+    const changedFields: string[] = [];
+
+    const topLevelFields = ['businessName', 'categoryId', 'phone', 'whatsappNumber', 'website', 'email'] as const;
+    for (const field of topLevelFields) {
+      if (data[field] !== undefined) {
+        let incoming = data[field];
+        let current = (client as any)[field];
+
+        // Handle ObjectIds to string comparison
+        if (current && current.toString) {
+          current = current.toString();
+        }
+
+        if (incoming !== current) {
+          (client as any)[field] = incoming;
+          changedFields.push(field);
+        }
+      }
+    }
+
+    if (data.timezone !== undefined || data.defaultCountryCode !== undefined) {
+      if (data.timezone !== undefined && client.settings?.timezone !== data.timezone) {
+        client.settings.timezone = data.timezone;
+        changedFields.push('settings.timezone');
+      }
+      if (data.defaultCountryCode !== undefined && client.settings?.defaultCountryCode !== data.defaultCountryCode) {
+        client.settings.defaultCountryCode = data.defaultCountryCode;
+        changedFields.push('settings.defaultCountryCode');
+      }
+      client.markModified('settings');
+    }
+
+    if (changedFields.length > 0) {
+      await client.save();
+      await writeLog({
+        level: 'info',
+        category: 'system',
+        message: 'Client information updated',
+        userId: (req as any).user?.id,
+        meta: {
+          clientId: client._id.toString(),
+          changedFields
+        }
+      });
+    }
 
     res.json({ success: true, data: client });
   } catch (err) {

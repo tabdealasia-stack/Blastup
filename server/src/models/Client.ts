@@ -14,6 +14,7 @@ export interface IClient extends Document {
   slug: string;
   email?: string | null;
   phone?: string | null;
+  whatsappNumber?: string | null;
   status: ClientStatus;
   deletionRequestedAt?: Date | null;
   deletionRequestedBy?: mongoose.Types.ObjectId | null;
@@ -67,6 +68,13 @@ const clientSchema = new Schema<IClient>(
     },
 
     phone: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 20,
+    },
+
+    whatsappNumber: {
       type: String,
       default: null,
       trim: true,

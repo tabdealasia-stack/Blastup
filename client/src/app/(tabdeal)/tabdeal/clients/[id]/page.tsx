@@ -1,7 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
-import useSWR from 'swr';
+import useSWR, { useSWRConfig } from 'swr';
 import { useParams, useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card } from '@/components/ui/Card';
@@ -12,13 +12,16 @@ import { tabdealApi } from '@/lib/api';
 import { ClientWhatsAppSection } from './ClientWhatsAppSection';
 import { ClientApiKeysSection } from './ClientApiKeysSection';
 import { ClientTemplatesSection } from './ClientTemplatesSection';
-import { ArrowLeft, Clock, Calendar, CheckCircle2, XCircle, AlertCircle, Send, Webhook } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, CheckCircle2, XCircle, AlertCircle, Send, Webhook, Edit } from 'lucide-react';
+import { EditClientModal } from './EditClientModal';
 import Link from 'next/link';
 
 export default function ClientDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
+  const { mutate } = useSWRConfig();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const { data: clientData, error: clientError, isLoading: loadingClient } = useSWR(
     id ? `/api/tabdeal/clients/${id}` : null,
@@ -74,9 +77,14 @@ export default function ClientDetailPage() {
         title={client.businessName} 
         description={`Category: ${client.categoryId?.name || 'Uncategorized'} • ID: ${client._id}`}
         action={
-          <Badge variant={client.status === 'active' ? 'success' : client.status === 'suspended' ? 'danger' : 'gray'}>
-            {client.status?.toUpperCase()}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)} className="flex items-center gap-1.5">
+              <Edit size={14} /> Edit Client
+            </Button>
+            <Badge variant={client.status === 'active' ? 'success' : client.status === 'suspended' ? 'danger' : 'gray'}>
+              {client.status?.toUpperCase()}
+            </Badge>
+          </div>
         }
       />
 
@@ -108,6 +116,11 @@ export default function ClientDetailPage() {
               <div>
                 <dt className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact Phone</dt>
                 <dd className="mt-1 text-sm text-gray-900">{client.phone || <span className="text-gray-400 italic">Not provided</span>}</dd>
+              </div>
+
+              <div>
+                <dt className="text-xs font-semibold text-gray-500 uppercase tracking-wider">WhatsApp Number</dt>
+                <dd className="mt-1 text-sm text-gray-900">{client.whatsappNumber || <span className="text-gray-400 italic">Not provided</span>}</dd>
               </div>
               
               <div>
@@ -254,6 +267,15 @@ export default function ClientDetailPage() {
         </div>
 
       </div>
+
+      {isEditModalOpen && (
+        <EditClientModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          client={client}
+          onSuccess={() => mutate(`/api/tabdeal/clients/${id}`)}
+        />
+      )}
     </div>
   );
 }
