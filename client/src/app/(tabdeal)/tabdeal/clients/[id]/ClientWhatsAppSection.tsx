@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { tabdealApi, ApiError } from '@/lib/api';
-import { QRCodeSVG } from 'qrcode.react';
 import { Smartphone, RefreshCw, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -149,10 +148,23 @@ export function ClientWhatsAppSection({ clientId, initialWhatsapp }: { clientId:
 
           {!isConnected && qrData?.data?.qr && (
             <div className="mt-2 border border-gray-200 p-5 rounded-lg bg-white shadow-sm flex flex-col items-center">
-              <p className="text-sm text-gray-700 font-bold mb-4 uppercase tracking-wider">Scan to Pair</p>
-              <div className="bg-white p-3 border border-gray-100 rounded-xl shadow-sm">
-                <QRCodeSVG value={qrData.data.qr} size={180} />
+              <p className="text-sm text-gray-700 font-bold mb-4 uppercase tracking-wider">
+                Scan to Pair
+              </p>
+
+              <div
+                className="bg-white p-3 border border-gray-100 rounded-xl shadow-sm flex items-center justify-center"
+                style={{ width: 180, height: 180 }}
+              >
+                <img
+                  src={qrData.data.qr}
+                  width={180}
+                  height={180}
+                  alt="WhatsApp QR Code"
+                  className="max-w-full max-h-full"
+                />
               </div>
+
               <p className="text-xs text-gray-400 mt-4 flex items-center gap-1">
                 <RefreshCw className="w-3 h-3 animate-spin" /> Auto-refreshing
               </p>
