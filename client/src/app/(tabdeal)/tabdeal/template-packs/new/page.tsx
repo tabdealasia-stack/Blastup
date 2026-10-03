@@ -5,13 +5,11 @@ import { ArrowLeft, ShieldBan } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { tabdealApi } from '@/lib/api';
 import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 
-export default function EditTemplatePackPage() {
+export default function NewTemplatePackPage() {
   const router = useRouter();
-  const params = useParams();
-  const id = params.id as string;
   
   const [formData, setFormData] = useState({
     name: '',
@@ -23,62 +21,56 @@ export default function EditTemplatePackPage() {
   });
   
   const [categories, setCategories] = useState<any[]>([]);
-  const [pageLoading, setPageLoading] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchData();
-  }, [id]);
-
-  const fetchData = async () => {
-    try {
-      const [packRes, catRes] = await Promise.all([
-        tabdealApi.getTemplatePack(id),
-        tabdealApi.getCategories()
-      ]);
-      const pack = packRes.data;
-      setFormData({
-        name: pack.name || '',
-        slug: pack.slug || '',
-        categoryId: pack.categoryId?._id || pack.categoryId || '',
-        description: pack.description || '',
-        active: pack.active ?? true,
-        displayOrder: pack.displayOrder || 0,
+    tabdealApi.getCategories()
+      .then(res => {
+        setCategories(res.data);
+        setPageLoading(false);
+      })
+      .catch(err => {
+        setError('Failed to load categories');
+        setPageLoading(false);
       });
-      setCategories(catRes.data);
-      setPageLoading(false);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load template pack data');
-      setPageLoading(false);
-    }
-  };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      await tabdealApi.updateTemplatePack(id, formData);
+      await tabdealApi.createTemplatePack(formData);
       router.push(`/tabdeal/template-packs`);
     } catch (err: any) {
-      setError(err.message || 'Failed to update template pack');
+      setError(err.message || 'Failed to create template pack');
       setLoading(false);
     }
+  };
+
+  const generateSlug = (name: string) => {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.value;
+    setFormData(prev => ({ ...prev, name, slug: generateSlug(name) }));
   };
 
   if (pageLoading) {
     return (
       <>
-        <Header title="Edit Template Pack" subtitle="Loading..." />
-        <div className="p-8 text-center text-gray-500">Loading data...</div>
+        <Header title="Create Template Pack" subtitle="Loading..." />
+        <div className="p-8 text-center text-gray-500">Loading categories...</div>
       </>
     );
   }
 
   return (
     <>
-      <Header title="Edit Template Pack" subtitle="Manage master template pack" />
+      <Header title="Create Template Pack" subtitle="Add a new master template pack" />
       
       <div className="page-content" style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
         
@@ -103,8 +95,9 @@ export default function EditTemplatePackPage() {
                 <input 
                   type="text" 
                   value={formData.name} 
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  onChange={handleNameChange}
                   style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                  placeholder="e.g. Starter Pack"
                   maxLength={150}
                   required
                 />
@@ -117,6 +110,7 @@ export default function EditTemplatePackPage() {
                   value={formData.slug} 
                   onChange={e => setFormData({ ...formData, slug: e.target.value.toLowerCase() })}
                   style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontFamily: 'monospace' }}
+                  placeholder="e.g. starter-pack"
                   maxLength={150}
                   required
                   pattern="^[a-z0-9-]+$"
@@ -146,6 +140,7 @@ export default function EditTemplatePackPage() {
                 value={formData.description} 
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                 style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '100px' }}
+                placeholder="Optional description of this template pack"
                 maxLength={500}
               />
             </div>
@@ -179,7 +174,7 @@ export default function EditTemplatePackPage() {
               <Link href="/tabdeal/template-packs">
                 <Button type="button" variant="outline">Cancel</Button>
               </Link>
-              <Button type="submit" isLoading={loading}>Save Changes</Button>
+              <Button type="submit" isLoading={loading}>Create Template Pack</Button>
             </div>
           </form>
         </div>

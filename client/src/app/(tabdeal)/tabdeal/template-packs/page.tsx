@@ -1,13 +1,15 @@
-﻿'use client';
+'use client';
 
 import useSWR from 'swr';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ErrorState, EmptyState } from '@/components/ui/States';
-import { Lock, FolderTree } from 'lucide-react';
+import { Lock, FolderTree, Edit } from 'lucide-react';
 import { tabdealApi } from '@/lib/api';
 import { CatalogueNav } from '@/components/tabdeal/CatalogueNav';
+import { Button } from '@/components/ui/Button';
+import Link from 'next/link';
 
 export default function TemplatePacksPage() {
   const { data, error, isLoading } = useSWR(
@@ -21,10 +23,9 @@ export default function TemplatePacksPage() {
         title="Master Catalogue" 
         description="Master template packs that bundle notifications for categories."
         action={
-          <div className="flex items-center text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
-            <Lock className="w-3.5 h-3.5 mr-1.5 text-gray-400" />
-            READ ONLY
-          </div>
+          <Link href="/tabdeal/template-packs/new">
+            <Button>Add New Template Pack</Button>
+          </Link>
         }
       />
 
@@ -63,6 +64,7 @@ export default function TemplatePacksPage() {
                   <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Templates</th>
                   <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Clients</th>
                   <th scope="col" className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</th>
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-50">
@@ -95,6 +97,12 @@ export default function TemplatePacksPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
                       {new Date(pack.createdAt).toLocaleDateString(undefined, { dateStyle: 'medium' })}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <Link href={`/tabdeal/template-packs/${pack._id}`} className="text-indigo-600 hover:text-indigo-900 inline-flex items-center">
+                        <Edit className="w-4 h-4 mr-1" />
+                        Edit
+                      </Link>
                     </td>
                   </tr>
                 ))}

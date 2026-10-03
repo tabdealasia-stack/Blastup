@@ -1,90 +1,58 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, ShieldBan } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { tabdealApi } from '@/lib/api';
 import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 
-export default function EditTemplatePackPage() {
+export default function NewCategoryPage() {
   const router = useRouter();
-  const params = useParams();
-  const id = params.id as string;
   
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
-    categoryId: '',
     description: '',
     active: true,
     displayOrder: 0,
   });
   
-  const [categories, setCategories] = useState<any[]>([]);
-  const [pageLoading, setPageLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchData();
-  }, [id]);
-
-  const fetchData = async () => {
-    try {
-      const [packRes, catRes] = await Promise.all([
-        tabdealApi.getTemplatePack(id),
-        tabdealApi.getCategories()
-      ]);
-      const pack = packRes.data;
-      setFormData({
-        name: pack.name || '',
-        slug: pack.slug || '',
-        categoryId: pack.categoryId?._id || pack.categoryId || '',
-        description: pack.description || '',
-        active: pack.active ?? true,
-        displayOrder: pack.displayOrder || 0,
-      });
-      setCategories(catRes.data);
-      setPageLoading(false);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load template pack data');
-      setPageLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      await tabdealApi.updateTemplatePack(id, formData);
-      router.push(`/tabdeal/template-packs`);
+      await tabdealApi.createCategory(formData);
+      router.push(`/tabdeal/categories`);
     } catch (err: any) {
-      setError(err.message || 'Failed to update template pack');
+      setError(err.message || 'Failed to create category');
       setLoading(false);
     }
   };
 
-  if (pageLoading) {
-    return (
-      <>
-        <Header title="Edit Template Pack" subtitle="Loading..." />
-        <div className="p-8 text-center text-gray-500">Loading data...</div>
-      </>
-    );
-  }
+  const generateSlug = (name: string) => {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.value;
+    setFormData(prev => ({ ...prev, name, slug: generateSlug(name) }));
+  };
 
   return (
     <>
-      <Header title="Edit Template Pack" subtitle="Manage master template pack" />
+      <Header title="Create Category" subtitle="Add a new master business category" />
       
       <div className="page-content" style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
         
         <div style={{ marginBottom: '24px' }}>
-          <Link href="/tabdeal/template-packs" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#64748b', textDecoration: 'none', fontWeight: 500 }}>
-            <ArrowLeft size={16} /> Back to Template Packs
+          <Link href="/tabdeal/categories" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#64748b', textDecoration: 'none', fontWeight: 500 }}>
+            <ArrowLeft size={16} /> Back to Categories
           </Link>
         </div>
 
@@ -99,13 +67,14 @@ export default function EditTemplatePackPage() {
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#334155' }}>Pack Name *</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#334155' }}>Category Name *</label>
                 <input 
                   type="text" 
                   value={formData.name} 
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  onChange={handleNameChange}
                   style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                  maxLength={150}
+                  placeholder="e.g. Real Estate"
+                  maxLength={100}
                   required
                 />
               </div>
@@ -117,7 +86,8 @@ export default function EditTemplatePackPage() {
                   value={formData.slug} 
                   onChange={e => setFormData({ ...formData, slug: e.target.value.toLowerCase() })}
                   style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontFamily: 'monospace' }}
-                  maxLength={150}
+                  placeholder="e.g. real-estate"
+                  maxLength={100}
                   required
                   pattern="^[a-z0-9-]+$"
                   title="Only lowercase letters, numbers, and hyphens are allowed"
@@ -126,26 +96,12 @@ export default function EditTemplatePackPage() {
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#334155' }}>Category *</label>
-              <select 
-                value={formData.categoryId} 
-                onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff' }}
-                required
-              >
-                <option value="" disabled>Select a Category</option>
-                {categories.map(c => (
-                  <option key={c._id} value={c._id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500, color: '#334155' }}>Description</label>
               <textarea 
                 value={formData.description} 
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                 style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '100px' }}
+                placeholder="Optional description of this category"
                 maxLength={500}
               />
             </div>
@@ -170,16 +126,16 @@ export default function EditTemplatePackPage() {
                     onChange={e => setFormData({ ...formData, active: e.target.checked })}
                     style={{ width: '16px', height: '16px' }}
                   />
-                  <span style={{ fontSize: '14px', color: '#475569' }}>Template pack is active</span>
+                  <span style={{ fontSize: '14px', color: '#475569' }}>Category is active</span>
                 </label>
               </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid #e2e8f0', paddingTop: '24px' }}>
-              <Link href="/tabdeal/template-packs">
+              <Link href="/tabdeal/categories">
                 <Button type="button" variant="outline">Cancel</Button>
               </Link>
-              <Button type="submit" isLoading={loading}>Save Changes</Button>
+              <Button type="submit" isLoading={loading}>Create Category</Button>
             </div>
           </form>
         </div>
