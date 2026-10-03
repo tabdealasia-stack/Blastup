@@ -1,4 +1,5 @@
-﻿'use client';
+'use client';
+import Link from 'next/link';
 
 import { useState } from 'react';
 import useSWR from 'swr';
@@ -31,10 +32,11 @@ export default function NotificationTemplatesPage() {
         title="Master Catalogue" 
         description="View the central repository of WhatsApp notification templates."
         action={
-          <div className="flex items-center text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
-            <Lock className="w-3.5 h-3.5 mr-1.5 text-gray-400" />
-            READ ONLY
-          </div>
+          <Link href="/tabdeal/templates/new">
+            <Button>
+              Add New Template
+            </Button>
+          </Link>
         }
       />
 
