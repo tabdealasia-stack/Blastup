@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, ShieldBan, Info } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { tabdealApi } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 interface EditClientModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export function EditClientModal({ isOpen, onClose, client, onSuccess }: EditClie
     setError(null);
     try {
       await tabdealApi.updateClient(client._id, formData);
+      toast.success('Client updated successfully');
       onSuccess();
       onClose();
     } catch (err: any) {
