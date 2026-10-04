@@ -1,0 +1,214 @@
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import { ClientCategory } from '../models/ClientCategory';
+import { TemplatePack } from '../models/TemplatePack';
+import { NotificationTemplate } from '../models/NotificationTemplate';
+
+dotenv.config({ path: '../.env' });
+
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/wa_platform';
+
+type TemplateDef = {
+  slug: string;
+  name: string;
+  event: string;
+  message: string;
+  variables: string[];
+};
+
+type CategoryDef = {
+  name: string;
+  slug: string;
+  description: string;
+  templates: TemplateDef[];
+};
+
+const categories: CategoryDef[] = [
+  {
+    name: 'Grocery / Supermarket',
+    slug: 'grocery-supermarket',
+    description: 'Notifications for grocery stores and supermarkets.',
+    templates: [
+      { slug: 'order-received', name: 'Order Received', event: 'order_received', message: 'Hello {{customer_name}}, your order #{{order_id}} has been received successfully. Thank you for shopping with us.', variables: ['customer_name', 'order_id'] },
+      { slug: 'order-confirmed', name: 'Order Confirmed', event: 'order_confirmed', message: 'Hello {{customer_name}}, your order #{{order_id}} has been confirmed. We are preparing it for you.', variables: ['customer_name', 'order_id'] },
+      { slug: 'order-ready', name: 'Order Ready', event: 'order_ready', message: 'Hello {{customer_name}}, your order #{{order_id}} is ready for pickup.', variables: ['customer_name', 'order_id'] },
+      { slug: 'order-dispatched', name: 'Order Dispatched', event: 'order_dispatched', message: 'Hello {{customer_name}}, your order #{{order_id}} has been dispatched. Delivery partner: {{delivery_partner}}.', variables: ['customer_name', 'order_id', 'delivery_partner'] },
+      { slug: 'order-delivered', name: 'Order Delivered', event: 'order_delivered', message: 'Hello {{customer_name}}, your order #{{order_id}} has been delivered. Thank you for shopping with us.', variables: ['customer_name', 'order_id'] },
+      { slug: 'order-cancelled', name: 'Order Cancelled', event: 'order_cancelled', message: 'Hello {{customer_name}}, your order #{{order_id}} has been cancelled. If you need assistance, please contact us.', variables: ['customer_name', 'order_id'] },
+      { slug: 'payment-received', name: 'Payment Received', event: 'payment_received', message: 'Hello {{customer_name}}, we have received your payment of {{amount}} for order #{{order_id}}. Thank you.', variables: ['customer_name', 'amount', 'order_id'] },
+      { slug: 'payment-failed', name: 'Payment Failed', event: 'payment_failed', message: 'Hello {{customer_name}}, payment for order #{{order_id}} could not be completed. Please try again.', variables: ['customer_name', 'order_id'] },
+      { slug: 'delivery-update', name: 'Delivery Update', event: 'delivery_update', message: 'Hello {{customer_name}}, your order #{{order_id}} delivery status is: {{status}}.', variables: ['customer_name', 'order_id', 'status'] },
+    ],
+  },
+  {
+    name: 'Salon / Beauty',
+    slug: 'salon-beauty',
+    description: 'Notifications for salons, spas and beauty businesses.',
+    templates: [
+      { slug: 'appointment-booked', name: 'Appointment Booked', event: 'appointment_booked', message: 'Hello {{customer_name}}, your appointment is booked for {{date}} at {{time}}. We look forward to seeing you.', variables: ['customer_name', 'date', 'time'] },
+      { slug: 'appointment-confirmed', name: 'Appointment Confirmed', event: 'appointment_confirmed', message: 'Hello {{customer_name}}, your appointment on {{date}} at {{time}} has been confirmed.', variables: ['customer_name', 'date', 'time'] },
+      { slug: 'appointment-reminder', name: 'Appointment Reminder', event: 'appointment_reminder', message: 'Reminder: Hello {{customer_name}}, your appointment is scheduled for {{date}} at {{time}}.', variables: ['customer_name', 'date', 'time'] },
+      { slug: 'appointment-rescheduled', name: 'Appointment Rescheduled', event: 'appointment_rescheduled', message: 'Hello {{customer_name}}, your appointment has been rescheduled to {{date}} at {{time}}.', variables: ['customer_name', 'date', 'time'] },
+      { slug: 'appointment-cancelled', name: 'Appointment Cancelled', event: 'appointment_cancelled', message: 'Hello {{customer_name}}, your appointment scheduled for {{date}} at {{time}} has been cancelled.', variables: ['customer_name', 'date', 'time'] },
+      { slug: 'service-completed', name: 'Service Completed', event: 'service_completed', message: 'Hello {{customer_name}}, your {{service_name}} service has been completed. Thank you for visiting us.', variables: ['customer_name', 'service_name'] },
+      { slug: 'payment-received', name: 'Payment Received', event: 'payment_received', message: 'Hello {{customer_name}}, payment of {{amount}} has been received. Thank you.', variables: ['customer_name', 'amount'] },
+      { slug: 'feedback-request', name: 'Feedback Request', event: 'feedback_request', message: 'Hello {{customer_name}}, we hope you enjoyed your visit. We would appreciate your feedback.', variables: ['customer_name'] },
+      { slug: 'follow-up', name: 'Customer Follow-up', event: 'follow_up', message: 'Hello {{customer_name}}, thank you for choosing us. Please contact us if you need any further assistance.', variables: ['customer_name'] },
+    ],
+  },
+  {
+    name: 'Clinic / Healthcare',
+    slug: 'clinic-healthcare',
+    description: 'Notifications for clinics, doctors and healthcare practices.',
+    templates: [
+      { slug: 'appointment-booked', name: 'Appointment Booked', event: 'appointment_booked', message: 'Hello {{patient_name}}, your appointment with {{doctor_name}} is booked for {{date}} at {{time}}.', variables: ['patient_name', 'doctor_name', 'date', 'time'] },
+      { slug: 'appointment-confirmed', name: 'Appointment Confirmed', event: 'appointment_confirmed', message: 'Hello {{patient_name}}, your appointment with {{doctor_name}} on {{date}} at {{time}} is confirmed.', variables: ['patient_name', 'doctor_name', 'date', 'time'] },
+      { slug: 'appointment-reminder', name: 'Appointment Reminder', event: 'appointment_reminder', message: 'Reminder: Hello {{patient_name}}, your appointment is scheduled for {{date}} at {{time}}.', variables: ['patient_name', 'date', 'time'] },
+      { slug: 'appointment-rescheduled', name: 'Appointment Rescheduled', event: 'appointment_rescheduled', message: 'Hello {{patient_name}}, your appointment has been rescheduled to {{date}} at {{time}}.', variables: ['patient_name', 'date', 'time'] },
+      { slug: 'appointment-cancelled', name: 'Appointment Cancelled', event: 'appointment_cancelled', message: 'Hello {{patient_name}}, your appointment on {{date}} at {{time}} has been cancelled.', variables: ['patient_name', 'date', 'time'] },
+      { slug: 'report-ready', name: 'Report Ready', event: 'report_ready', message: 'Hello {{patient_name}}, your report is ready. Please contact the clinic for further details.', variables: ['patient_name'] },
+      { slug: 'payment-received', name: 'Payment Received', event: 'payment_received', message: 'Hello {{patient_name}}, payment of {{amount}} has been received. Thank you.', variables: ['patient_name', 'amount'] },
+      { slug: 'follow-up-reminder', name: 'Follow-up Reminder', event: 'follow_up_reminder', message: 'Hello {{patient_name}}, this is a reminder for your follow-up scheduled on {{date}} at {{time}}.', variables: ['patient_name', 'date', 'time'] },
+      { slug: 'thank-you', name: 'Thank You', event: 'thank_you', message: 'Hello {{patient_name}}, thank you for visiting us. We wish you good health.', variables: ['patient_name'] },
+    ],
+  },
+  {
+    name: 'Hotel / Hospitality',
+    slug: 'hotel-hospitality',
+    description: 'Notifications for hotels, resorts and hospitality businesses.',
+    templates: [
+      { slug: 'booking-received', name: 'Booking Received', event: 'booking_received', message: 'Hello {{guest_name}}, your booking request #{{booking_id}} has been received for {{check_in}} to {{check_out}}.', variables: ['guest_name', 'booking_id', 'check_in', 'check_out'] },
+      { slug: 'booking-confirmed', name: 'Booking Confirmed', event: 'booking_confirmed', message: 'Hello {{guest_name}}, your booking #{{booking_id}} is confirmed. Check-in: {{check_in}}. Check-out: {{check_out}}.', variables: ['guest_name', 'booking_id', 'check_in', 'check_out'] },
+      { slug: 'check-in-reminder', name: 'Check-in Reminder', event: 'check_in_reminder', message: 'Hello {{guest_name}}, this is a reminder for your check-in on {{check_in}}.', variables: ['guest_name', 'check_in'] },
+      { slug: 'check-in-completed', name: 'Check-in Completed', event: 'check_in_completed', message: 'Hello {{guest_name}}, your check-in has been completed. We hope you enjoy your stay.', variables: ['guest_name'] },
+      { slug: 'check-out-reminder', name: 'Check-out Reminder', event: 'check_out_reminder', message: 'Hello {{guest_name}}, this is a reminder that check-out is scheduled for {{check_out}}.', variables: ['guest_name', 'check_out'] },
+      { slug: 'booking-cancelled', name: 'Booking Cancelled', event: 'booking_cancelled', message: 'Hello {{guest_name}}, booking #{{booking_id}} has been cancelled.', variables: ['guest_name', 'booking_id'] },
+      { slug: 'payment-received', name: 'Payment Received', event: 'payment_received', message: 'Hello {{guest_name}}, payment of {{amount}} has been received for booking #{{booking_id}}.', variables: ['guest_name', 'amount', 'booking_id'] },
+      { slug: 'invoice-ready', name: 'Invoice Ready', event: 'invoice_ready', message: 'Hello {{guest_name}}, your invoice for booking #{{booking_id}} is ready.', variables: ['guest_name', 'booking_id'] },
+      { slug: 'feedback-request', name: 'Feedback Request', event: 'feedback_request', message: 'Hello {{guest_name}}, thank you for staying with us. We would appreciate your feedback.', variables: ['guest_name'] },
+    ],
+  },
+  {
+    name: 'Gym / Fitness',
+    slug: 'gym-fitness',
+    description: 'Notifications for gyms, fitness centres and trainers.',
+    templates: [
+      { slug: 'membership-activated', name: 'Membership Activated', event: 'membership_activated', message: 'Hello {{customer_name}}, your membership has been activated successfully. Welcome to {{business_name}}.', variables: ['customer_name', 'business_name'] },
+      { slug: 'membership-expiry-reminder', name: 'Membership Expiry Reminder', event: 'membership_expiry_reminder', message: 'Hello {{customer_name}}, your membership expires on {{expiry_date}}. Please renew to continue your membership.', variables: ['customer_name', 'expiry_date'] },
+      { slug: 'payment-received', name: 'Payment Received', event: 'payment_received', message: 'Hello {{customer_name}}, payment of {{amount}} has been received for your membership.', variables: ['customer_name', 'amount'] },
+      { slug: 'class-booked', name: 'Class Booked', event: 'class_booked', message: 'Hello {{customer_name}}, your {{class_name}} class is booked for {{date}} at {{time}}.', variables: ['customer_name', 'class_name', 'date', 'time'] },
+      { slug: 'class-reminder', name: 'Class Reminder', event: 'class_reminder', message: 'Reminder: Hello {{customer_name}}, your {{class_name}} class starts at {{time}} today.', variables: ['customer_name', 'class_name', 'time'] },
+      { slug: 'attendance-thank-you', name: 'Attendance Thank You', event: 'attendance_thank_you', message: 'Hello {{customer_name}}, thank you for visiting {{business_name}} today. Keep up the great work!', variables: ['customer_name', 'business_name'] },
+      { slug: 'membership-cancelled', name: 'Membership Cancelled', event: 'membership_cancelled', message: 'Hello {{customer_name}}, your membership has been cancelled. Please contact us for assistance.', variables: ['customer_name'] },
+      { slug: 'personal-training-booked', name: 'Personal Training Booked', event: 'personal_training_booked', message: 'Hello {{customer_name}}, your personal training session is booked for {{date}} at {{time}}.', variables: ['customer_name', 'date', 'time'] },
+      { slug: 'feedback-request', name: 'Feedback Request', event: 'feedback_request', message: 'Hello {{customer_name}}, we value your feedback about your experience with us.', variables: ['customer_name'] },
+    ],
+  },
+  {
+    name: 'Real Estate',
+    slug: 'real-estate',
+    description: 'Notifications for property brokers, agents and real estate businesses.',
+    templates: [
+      { slug: 'lead-received', name: 'Lead Received', event: 'lead_received', message: 'Hello {{customer_name}}, thank you for your property enquiry. Our team will contact you shortly.', variables: ['customer_name'] },
+      { slug: 'site-visit-booked', name: 'Site Visit Booked', event: 'site_visit_booked', message: 'Hello {{customer_name}}, your site visit for {{property_name}} is booked on {{date}} at {{time}}.', variables: ['customer_name', 'property_name', 'date', 'time'] },
+      { slug: 'site-visit-reminder', name: 'Site Visit Reminder', event: 'site_visit_reminder', message: 'Reminder: Hello {{customer_name}}, your site visit is scheduled for {{date}} at {{time}}.', variables: ['customer_name', 'date', 'time'] },
+      { slug: 'site-visit-rescheduled', name: 'Site Visit Rescheduled', event: 'site_visit_rescheduled', message: 'Hello {{customer_name}}, your site visit has been rescheduled to {{date}} at {{time}}.', variables: ['customer_name', 'date', 'time'] },
+      { slug: 'property-details', name: 'Property Details', event: 'property_details', message: 'Hello {{customer_name}}, here are the details for {{property_name}}. Our team can assist you with further information.', variables: ['customer_name', 'property_name'] },
+      { slug: 'booking-confirmed', name: 'Booking Confirmed', event: 'booking_confirmed', message: 'Hello {{customer_name}}, your booking for {{property_name}} has been confirmed.', variables: ['customer_name', 'property_name'] },
+      { slug: 'payment-received', name: 'Payment Received', event: 'payment_received', message: 'Hello {{customer_name}}, payment of {{amount}} has been received. Thank you.', variables: ['customer_name', 'amount'] },
+      { slug: 'document-update', name: 'Document Update', event: 'document_update', message: 'Hello {{customer_name}}, there is an update regarding your property documents. Please contact our team.', variables: ['customer_name'] },
+      { slug: 'follow-up', name: 'Lead Follow-up', event: 'follow_up', message: 'Hello {{customer_name}}, we are following up regarding your property enquiry. Please let us know how we can assist you.', variables: ['customer_name'] },
+    ],
+  },
+];
+
+async function seed() {
+  await mongoose.connect(MONGO_URI);
+  console.log('MongoDB connected');
+
+  for (let categoryIndex = 0; categoryIndex < categories.length; categoryIndex++) {
+    const categoryDef = categories[categoryIndex];
+
+    let category = await ClientCategory.findOne({ slug: categoryDef.slug });
+
+    if (!category) {
+      category = await ClientCategory.create({
+        name: categoryDef.name,
+        slug: categoryDef.slug,
+        description: categoryDef.description,
+        active: true,
+        displayOrder: categoryIndex + 1,
+      });
+      console.log(`Category created: ${categoryDef.name}`);
+    } else {
+      console.log(`Category exists: ${categoryDef.name}`);
+    }
+
+    const packSlug = `${categoryDef.slug}-standard`;
+    let pack = await TemplatePack.findOne({
+      slug: packSlug,
+      categoryId: category._id,
+    });
+
+    if (!pack) {
+      pack = await TemplatePack.create({
+        name: `${categoryDef.name} Standard`,
+        slug: packSlug,
+        categoryId: category._id,
+        description: `Standard notification template pack for ${categoryDef.name}.`,
+        active: true,
+        isDefault: true,
+        displayOrder: 1,
+      });
+      console.log(`  Pack created: ${pack.name}`);
+    } else {
+      console.log(`  Pack exists: ${pack.name}`);
+    }
+
+    if (!category.defaultTemplatePackId) {
+      category.defaultTemplatePackId = pack._id;
+      await category.save();
+    }
+
+    for (let i = 0; i < categoryDef.templates.length; i++) {
+      const templateDef = categoryDef.templates[i];
+
+      await NotificationTemplate.findOneAndUpdate(
+        {
+          slug: templateDef.slug,
+          templatePackId: pack._id,
+        },
+        {
+          $set: {
+            name: templateDef.name,
+            event: templateDef.event,
+            message: templateDef.message,
+            variables: templateDef.variables,
+            active: true,
+            displayOrder: i + 1,
+          },
+          $setOnInsert: {
+            slug: templateDef.slug,
+            templatePackId: pack._id,
+          },
+        },
+        {
+          upsert: true,
+          new: true,
+          setDefaultsOnInsert: true,
+        }
+      );
+    }
+
+    console.log(`  Templates processed: ${categoryDef.templates.length}`);
+  }
+
+  console.log('\nMASTER CATEGORY/TEMPLATE SEED COMPLETE');
+  await mongoose.disconnect();
+}
+
+seed().catch(async (error) => {
+  console.error('SEED FAILED:', error);
+  await mongoose.disconnect();
+  process.exit(1);
+});
