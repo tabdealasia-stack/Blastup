@@ -20,7 +20,7 @@ async function resolveClientInstance(clientId: string): Promise<string> {
   }
 
   const instanceId = account.instanceId;
-  
+
   // Verify WhatsAppInstance exists
   const instance = await WhatsAppInstance.findOne({ instanceId });
   if (!instance) {
@@ -33,7 +33,7 @@ async function resolveClientInstance(clientId: string): Promise<string> {
 export async function provision(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const { id: clientId } = req.params;
-    
+
     // Validate Client exists
     const client = await Client.findById(clientId).select('_id userId');
     if (!client) {
@@ -54,7 +54,7 @@ export async function provision(req: AuthRequest, res: Response, next: NextFunct
 
     // Use existing service to provision (it upserts WhatsAppInstance)
     await wa.provisionWhatsAppInstance(instanceId);
-    
+
     res.json({ success: true, message: 'Provisioned successfully' });
   } catch (err) {
     next(err);
@@ -65,7 +65,7 @@ export async function getStatus(req: AuthRequest, res: Response, next: NextFunct
   try {
     const { id: clientId } = req.params;
     const instanceId = await resolveClientInstance(clientId);
-    
+
     const instance = await wa.getInstanceStatus(instanceId);
     res.json({ success: true, data: instance });
   } catch (err) {
@@ -77,7 +77,7 @@ export async function getQR(req: AuthRequest, res: Response, next: NextFunction)
   try {
     const { id: clientId } = req.params;
     const instanceId = await resolveClientInstance(clientId);
-    
+
     // Step 5: Prevent browser caching of QR response completely
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -99,9 +99,20 @@ export async function reconnect(req: AuthRequest, res: Response, next: NextFunct
   try {
     const { id: clientId } = req.params;
     const instanceId = await resolveClientInstance(clientId);
-    
+
     await wa.restartWhatsApp(instanceId);
     res.json({ success: true, message: 'Reconnect initiated' });
+  } catch (err) {
+    next(err);
+  }
+}
+export async function resetSession(req: AuthRequest, res: Response, next: NextFunction) {
+  try {
+    const { id: clientId } = req.params;
+    const instanceId = await resolveClientInstance(clientId);
+
+    await wa.resetWhatsAppSession(instanceId);
+    res.json({ success: true, message: 'Session reset initiated' });
   } catch (err) {
     next(err);
   }

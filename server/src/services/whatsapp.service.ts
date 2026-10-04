@@ -144,10 +144,10 @@ export async function initWhatsApp(instanceId: string): Promise<void> {
 
     const sock = makeWASocket({
       version,
-      logger: pinoLogger as any,
+      logger: pino({ level: 'error' }).child({ instanceId }) as any,
       auth: {
         creds: state.creds,
-        keys: makeCacheableSignalKeyStore(state.keys, pinoLogger as any),
+        keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'error' }).child({ instanceId }) as any),
       },
       printQRInTerminal: false,
       syncFullHistory: true,
@@ -1084,3 +1084,55 @@ export async function deleteSession(instanceId: string): Promise<void> {
 
 
 
+export async function resetWhatsAppSession(instanceId: string): Promise<void> {
+  if (instanceId === '6aacb5fa069dffca7ca76126') {
+    throw new Error('Production WhatsApp instance cannot be reset through this endpoint.');
+  }
+
+  const instance = await WhatsAppInstance.findOne({ instanceId });
+  if (!instance) {
+    throw new Error('Instance not found');
+  }
+
+  if (instance.status === 'connected' || instance.phone) {
+    throw new Error('Cannot reset an already authenticated production session. Please disconnect it first.');
+  }
+
+  // Clear all timers and counters
+  const timer = reconnectTimers.get(instanceId);
+  if (timer) { clearTimeout(timer); reconnectTimers.delete(instanceId); }
+  reconnectAttempts.delete(instanceId);
+
+  const sock = sockets.get(instanceId);
+  if (sock) {
+    manualDisconnects.set(instanceId, true);
+    try { sock.end(undefined); } catch {}
+    sockets.delete(instanceId);
+    await new Promise((r) => setTimeout(r, 800));
+  }
+
+  manualDisconnects.set(instanceId, false);
+  connectingStates.set(instanceId, false);
+  await WhatsAppInstance.findOneAndUpdate(
+    { instanceId },
+    { 
+      $set: { status: 'disconnected', lastDisconnectedAt: new Date() },
+      $unset: { qr: 1 }
+    }
+  );
+
+  await WhatsAppAccount.updateOne(
+    { instanceId },
+    { $set: { status: 'disconnected', lastSeenAt: new Date() } }
+  );
+
+  const sessionDir = getSessionDir(instanceId);
+  if (fs.existsSync(sessionDir)) {
+    try {
+      fs.rmSync(sessionDir, { recursive: true, force: true });
+      logger.info(`[${instanceId}] Explicitly deleted corrupt session directory during reset`);
+    } catch (err) {
+      logger.error(`[${instanceId}] Failed to delete session directory`, { err });
+    }
+  }
+}

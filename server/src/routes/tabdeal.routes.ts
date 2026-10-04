@@ -50,6 +50,7 @@ router.post('/clients/:id/whatsapp/provision', clientWhatsappController.provisio
 router.get('/clients/:id/whatsapp/qr', clientWhatsappController.getQR);
 router.get('/clients/:id/whatsapp/status', clientWhatsappController.getStatus);
 router.post('/clients/:id/whatsapp/reconnect', clientWhatsappController.reconnect);
+router.post('/clients/:id/whatsapp/reset', clientWhatsappController.resetSession);
 
 // Templates
 router.get('/templates', templateController.getTemplates);

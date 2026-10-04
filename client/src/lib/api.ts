@@ -240,6 +240,7 @@ export const tabdealApi = {
   getClientWhatsAppQR: (clientId: string, t?: number) => request<{ success: boolean; data: { qr: string } }>(`/api/tabdeal/clients/${clientId}/whatsapp/qr`, t ? { params: { _t: t } } : undefined),
   getClientWhatsAppStatus: (clientId: string) => request<{ success: boolean; data: any }>(`/api/tabdeal/clients/${clientId}/whatsapp/status`),
   reconnectClientWhatsApp: (clientId: string) => request<{ success: boolean }>(`/api/tabdeal/clients/${clientId}/whatsapp/reconnect`, { method: 'POST' }),
+  resetClientWhatsAppSession: (clientId: string) => request<{ success: boolean }>(`/api/tabdeal/clients/${clientId}/whatsapp/reset`, { method: 'POST' }),
 
   // Templates
   getTemplates: (params?: any) => request<{ success: boolean; data: any[]; pagination: any }>('/api/tabdeal/templates', { params }),

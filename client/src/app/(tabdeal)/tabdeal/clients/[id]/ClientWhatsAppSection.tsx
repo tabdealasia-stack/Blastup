@@ -15,6 +15,7 @@ export function ClientWhatsAppSection({ clientId, initialWhatsapp }: { clientId:
   
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [showReconnectConfirm, setShowReconnectConfirm] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Poll status occasionally if we are connected, but poll faster if QR is available or connecting
   const { data: statusData, mutate: refreshStatus } = useSWR(
@@ -77,6 +78,24 @@ export function ClientWhatsAppSection({ clientId, initialWhatsapp }: { clientId:
     }
   };
 
+  const handleResetSession = async () => {
+    if (!window.confirm('Are you sure you want to completely reset this session? This will force a new QR code.')) return;
+    setIsResetting(true);
+    try {
+      await tabdealApi.resetClientWhatsAppSession(clientId);
+      toast.success('Session reset successfully. Please click Restart Container to generate a new QR.');
+      refreshStatus();
+      refreshQR();
+    } catch (err: any) {
+      if (err instanceof ApiError) {
+        toast.error(err.message || 'Failed to reset session');
+      } else {
+        toast.error('An unexpected error occurred.');
+      }
+    } finally {
+      setIsResetting(false);
+    }
+  };
   const hasAccount = !!initialWhatsapp || !!statusData?.data;
 
   return (
@@ -217,6 +236,17 @@ export function ClientWhatsAppSection({ clientId, initialWhatsapp }: { clientId:
                 >
                   Restart Container
                 </Button>
+                
+                {(!initialWhatsapp?.phoneNumber && !statusData?.data?.phoneNumber) && (
+                  <Button 
+                    variant="outline"
+                    onClick={handleResetSession}
+                    disabled={isResetting}
+                    className="text-sm text-amber-600 hover:text-amber-700 border-amber-200 hover:bg-amber-50 bg-white"
+                  >
+                    Reset Pairing State
+                  </Button>
+                )}
               </div>
             )}
           </div>
