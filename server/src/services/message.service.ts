@@ -54,6 +54,7 @@ export async function sendText(instanceId: string, params: SendTextParams) {
     chatId: jid,
     type: 'text',
     text: params.text,
+    rawMessage: result?.message,
   });
 
   return result;
@@ -77,6 +78,7 @@ export async function sendImage(instanceId: string, params: SendMediaParams) {
     caption: params.caption,
     mediaUrl: params.filePath,
     mediaMimeType: params.mimetype,
+    rawMessage: result?.message,
   });
 
   return result;
@@ -109,6 +111,7 @@ export async function sendImageFromUrl(
     caption: params.caption,
     mediaUrl: params.url,
     mediaMimeType: mimetype,
+    rawMessage: result?.message,
   });
 
   return result;
@@ -132,6 +135,7 @@ export async function sendVideo(instanceId: string, params: SendMediaParams) {
     caption: params.caption,
     mediaUrl: params.filePath,
     mediaMimeType: params.mimetype,
+    rawMessage: result?.message,
   });
 
   return result;
@@ -154,6 +158,7 @@ export async function sendAudio(instanceId: string, params: SendMediaParams) {
     type: 'audio',
     mediaUrl: params.filePath,
     mediaMimeType: params.mimetype,
+    rawMessage: result?.message,
   });
 
   return result;
@@ -179,6 +184,7 @@ export async function sendDocument(instanceId: string, params: SendMediaParams) 
     mediaUrl: params.filePath,
     mediaMimeType: params.mimetype,
     mediaFileName: params.filename || path.basename(params.filePath),
+    rawMessage: result?.message,
   });
 
   return result;
@@ -237,6 +243,7 @@ export async function sendButton(instanceId: string, params: SendButtonParams) {
     chatId: jid,
     type: 'button',
     text: fullText,
+    rawMessage: result?.message,
   });
 
   return result;
@@ -267,6 +274,7 @@ export async function sendSlider(instanceId: string, params: SendSliderParams) {
     chatId: jid,
     type: 'slider',
     text: fullContent,
+    rawMessage: result?.message,
   });
 
   return result;
@@ -281,6 +289,7 @@ async function persistOutgoingMessage(instanceId: string, data: {
   mediaUrl?: string;
   mediaMimeType?: string;
   mediaFileName?: string;
+  rawMessage?: any;
 }) {
   const sock = getSocket(instanceId);
   const now = new Date();
@@ -298,6 +307,7 @@ async function persistOutgoingMessage(instanceId: string, data: {
     mediaUrl: data.mediaUrl || null,
     mediaMimeType: data.mediaMimeType || null,
     mediaFileName: data.mediaFileName || null,
+    rawMessage: data.rawMessage || null,
     status: 'sent',
     timestamp: now,
   });

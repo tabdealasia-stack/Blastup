@@ -159,7 +159,7 @@ export async function initWhatsApp(instanceId: string): Promise<void> {
       retryRequestDelayMs: 200,
       defaultQueryTimeoutMs: 60000,
       getMessage: async (key) => {
-        const msg = await Message.findOne({ msgId: key.id!, instanceId });
+        const msg = await Message.findOne({ msgId: key.id!, instanceId }).select('+rawMessage');
         return msg?.rawMessage as proto.IMessage | undefined;
       },
     });
@@ -889,6 +889,7 @@ async function handleChatbotAutoResponse(instanceId: string, toJid: string, inco
         caption: replyImageUrl ? replyText : undefined,
         status: 'sent',
         timestamp: new Date(),
+        rawMessage: res?.message || null,
       });
 
       await Chat.findOneAndUpdate(
