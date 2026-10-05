@@ -84,9 +84,13 @@ router.get('/message-logs/:id', logController.getMessageLog);
 router.get('/event-logs', logController.getEventLogs);
 router.get('/event-logs/:id', logController.getEventLog);
 
-// Placeholders for future phases
-// ...
-router.get('/api-keys', (req, res) => res.json({ data: [] }));
-router.get('/integrations', (req, res) => res.json({ data: [] }));
+import * as gatewayController from '../controllers/tabdeal/gateway.controller';
+
+// Website Integrations (Gateway)
+router.get('/integrations', gatewayController.getIntegrations);
+router.post('/integrations', validate(gatewayController.createIntegrationSchema), gatewayController.createIntegration);
+router.get('/integrations/:id', gatewayController.getIntegration);
+router.patch('/integrations/:id', validate(gatewayController.updateIntegrationSchema), gatewayController.updateIntegration);
+router.post('/integrations/:id/revoke', gatewayController.revokeIntegration);
 
 export default router;

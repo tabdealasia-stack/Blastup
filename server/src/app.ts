@@ -18,6 +18,7 @@ import healthRoutes from './routes/health.routes';
 import apiKeyRoutes from './routes/apikey.routes';
 import notificationEventRoutes from './routes/notification-event.routes';
 import tabdealRoutes from './routes/tabdeal.routes';
+import gatewayRoutes from './routes/gateway.routes';
 import telemetryRoutes from './routes/telemetry.routes';
 import clientTemplateRoutes from './routes/client-template.routes';
 import webhookRoutes from './routes/webhook.routes';
@@ -46,6 +47,8 @@ export function createApp(): express.Application {
   applySecurity(app);
 
   // ── Body parsers ────────────────────────────────────────────────
+  app.use('/api/gateway', gatewayRoutes);
+
   app.use(express.json({ limit: '1mb' }));
 
   app.use(
