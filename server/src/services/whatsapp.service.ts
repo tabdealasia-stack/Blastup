@@ -27,6 +27,7 @@ import { getSafeModeManager } from '../config/safemode';
 import { wrapBaileysSocket } from '../safemode/wrapBaileysSocket';
 import { recordKnownChatsFromStore } from '../safemode/recordKnownChatsFromStore';
 import { SafeModeError } from '../safemode/SafeModeError';
+import { handleInboundVerificationMessage } from './whatsapp-verification.service';
 
 export const waEvents = new EventEmitter();
 waEvents.setMaxListeners(100);
@@ -547,6 +548,17 @@ async function processIncomingMessage(instanceId: string, msg: proto.IWebMessage
     waEvents.emit(`message:${instanceId}`, { chatId, msgId, type: messageType });
 
     let incomingText = content.text || content.caption || '';
+
+    // Check for WhatsApp inbound verification challenge response (VERIFY <CODE>)
+    if (!isFromMe && incomingText) {
+      try {
+        const isVerification = await handleInboundVerificationMessage(instanceId, chatId, incomingText, sock);
+        if (isVerification) return;
+      } catch (err) {
+        logger.error(`[${instanceId}] Error processing WhatsApp verification message`, { error: err, chatId });
+      }
+    }
+
     if (/^\/s(?:\s|$)/i.test(incomingText)) {
       const shortcuts = [
         '📱 Blastup shortcuts',

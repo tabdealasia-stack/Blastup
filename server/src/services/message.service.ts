@@ -280,7 +280,7 @@ export async function sendSlider(instanceId: string, params: SendSliderParams) {
   return result;
 }
 
-async function persistOutgoingMessage(instanceId: string, data: {
+export async function persistOutgoingMessage(instanceId: string, data: {
   msgId: string;
   chatId: string;
   type: string;

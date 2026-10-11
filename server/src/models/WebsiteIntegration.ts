@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export type WebsiteIntegrationStatus = 'active' | 'revoked';
+export type VerificationMethod = 'none' | 'whatsapp_inbound';
 
 export interface IWebsiteIntegration extends Document {
   integrationId: string;
@@ -15,6 +16,8 @@ export interface IWebsiteIntegration extends Document {
   };
   rateLimitPerIpPerHour: number;
   rateLimitPerDay: number;
+  verificationMethod?: VerificationMethod;
+  requiresMobileVerification?: boolean;
   status: WebsiteIntegrationStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -63,6 +66,15 @@ const websiteIntegrationSchema = new Schema<IWebsiteIntegration>(
       type: Number,
       required: true,
       default: 50,
+    },
+    verificationMethod: {
+      type: String,
+      enum: ['none', 'whatsapp_inbound'],
+      default: 'none',
+    },
+    requiresMobileVerification: {
+      type: Boolean,
+      default: false,
     },
     status: {
       type: String,

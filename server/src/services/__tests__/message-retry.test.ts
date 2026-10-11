@@ -10,6 +10,7 @@ jest.mock('../../models/Message', () => ({
   },
 }));
 jest.mock('../../models/Chat', () => ({ Chat: { findOneAndUpdate: jest.fn() } }));
+jest.mock('../../models/WhatsAppInstance', () => ({ WhatsAppInstance: { findOneAndUpdate: jest.fn() } }));
 
 jest.mock('../whatsapp.service', () => ({
   getSocket: jest.fn().mockReturnValue({ user: { id: '123456@s.whatsapp.net' } }),
