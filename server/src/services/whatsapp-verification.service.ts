@@ -1,9 +1,25 @@
 import crypto from 'crypto';
 import Boom from '@hapi/boom';
 import { WebsiteIntegration } from '../models/WebsiteIntegration';
+import { WhatsAppAccount } from '../models/WhatsAppAccount';
 import { getRedisClient } from '../config/redis';
 import { decryptWebhookSecret } from '../utils/webhookCrypto';
 import { logger } from '../config/logger';
+
+/**
+ * Lazily resolves active Baileys socket from whatsapp.service.
+ * Prevents eager evaluation of @whiskeysockets/baileys ESM imports in non-socket test suites.
+ */
+function getActiveSocket(instanceId: string): any {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const waService = require('./whatsapp.service');
+    return waService.getSocket ? waService.getSocket(instanceId) : null;
+  } catch (err) {
+    logger.warn('Failed to resolve active WhatsApp socket', { error: String(err) });
+    return null;
+  }
+}
 
 export interface CreateChallengeParams {
   integrationId: string;
@@ -38,28 +54,44 @@ export interface ChallengeStatusResult {
 }
 
 export function normalizePhone(rawPhone: string): string {
-  return rawPhone.replace(/\D/g, '');
+  if (!rawPhone || typeof rawPhone !== 'string') return '';
+  let digits = rawPhone.replace(/\D/g, '');
+  // Strip leading zeros (e.g. 08698884383 -> 8698884383)
+  digits = digits.replace(/^0+/, '');
+  return digits;
 }
 
 /**
  * Validates whether a submitted payload phone matches a verified WhatsApp phone.
- * Supports standard national (e.g., 10-digit) and international formatting.
+ * Supports exact match and standard 10-digit national matching with 1-4 digit country code.
+ * Rejects loose partial-suffix matching to prevent number spoofing.
  */
 export function isPhoneMatch(submittedPhone: string, verifiedPhone: string): boolean {
-  const cleanSubmitted = normalizePhone(submittedPhone);
-  const cleanVerified = normalizePhone(verifiedPhone);
+  const normSubmitted = normalizePhone(submittedPhone);
+  const normVerified = normalizePhone(verifiedPhone);
 
-  if (!cleanSubmitted || !cleanVerified) return false;
-  if (cleanSubmitted === cleanVerified) return true;
+  if (!normSubmitted || !normVerified) return false;
+  if (normSubmitted.length < 7 || normSubmitted.length > 15) return false;
+  if (normVerified.length < 7 || normVerified.length > 15) return false;
 
-  // Handle standard 10-digit matches with/without country codes (e.g. 918698884383 vs 8698884383)
-  if (cleanSubmitted.length >= 10 && cleanVerified.length >= 10) {
-    if (cleanSubmitted.slice(-10) === cleanVerified.slice(-10)) {
-      return true;
+  // 1. Exact equality (e.g. 918698884383 === 918698884383)
+  if (normSubmitted === normVerified) return true;
+
+  // 2. Strict 10-digit national match with valid country code prefix
+  if (normSubmitted.length >= 10 && normVerified.length >= 10) {
+    const sub10 = normSubmitted.slice(-10);
+    const ver10 = normVerified.slice(-10);
+    if (sub10 === ver10) {
+      const longer = normSubmitted.length > normVerified.length ? normSubmitted : normVerified;
+      const shorter = normSubmitted.length > normVerified.length ? normVerified : normSubmitted;
+      const prefix = longer.slice(0, longer.length - 10);
+      if (shorter.length === 10 && prefix.length >= 1 && prefix.length <= 4) {
+        return true;
+      }
     }
   }
 
-  return cleanSubmitted.endsWith(cleanVerified) || cleanVerified.endsWith(cleanSubmitted);
+  return false;
 }
 
 /**
@@ -135,15 +167,38 @@ export async function createWhatsAppChallenge(params: CreateChallengeParams): Pr
     throw Boom.badImplementation('Unsupported CAPTCHA provider');
   }
 
-  // Retrieve client's configured WhatsApp number
+  // Retrieve client's configured WhatsApp account and check connection readiness
   await integration.populate('clientId');
   const client = integration.clientId as any;
-  if (!client || !client.whatsappNumber) {
-    logger.error('Client has no WhatsApp number configured for inbound challenge', { clientId: client?._id });
-    throw Boom.badImplementation('Business WhatsApp contact is not configured');
+  if (!client) {
+    logger.error('Integration has no valid client', { integrationId });
+    throw Boom.badImplementation('Integration client is missing');
   }
 
-  const businessNumber = normalizePhone(client.whatsappNumber);
+  const waAccount = await WhatsAppAccount.findOne({
+    clientId: client._id,
+    status: 'connected',
+  });
+  if (!waAccount || !waAccount.instanceId) {
+    logger.warn('WhatsApp instance not connected for client', { clientId: client._id });
+    throw Boom.serverUnavailable('WhatsApp instance is not connected for this business');
+  }
+
+  const activeSock = getActiveSocket(waAccount.instanceId);
+  if (!activeSock) {
+    logger.warn('WhatsApp active socket offline for instance', { instanceId: waAccount.instanceId });
+    throw Boom.serverUnavailable('WhatsApp service is currently offline for this business');
+  }
+
+  const rawBusinessNumber =
+    waAccount.phoneNumber ||
+    client.whatsappNumber ||
+    (activeSock.user?.id ? activeSock.user.id.split('@')[0].split(':')[0] : '');
+  const businessNumber = normalizePhone(rawBusinessNumber);
+  if (!businessNumber || businessNumber.length < 7) {
+    logger.error('Client has no valid WhatsApp business number configured', { clientId: client._id });
+    throw Boom.badImplementation('Business WhatsApp contact is not configured');
+  }
 
   // Generate 128-bit unpredictable challenge code (32 uppercase hex characters)
   const challengeCode = crypto.randomBytes(16).toString('hex').toUpperCase();
@@ -151,12 +206,16 @@ export async function createWhatsAppChallenge(params: CreateChallengeParams): Pr
   const pollToken = crypto.randomBytes(16).toString('hex');
   const expiresIn = 600; // 10 minutes
 
-  const challengeKey = `wa:challenge:${challengeCode}`;
+  // Namespace challenge key by instanceId to enforce absolute multi-tenant instance isolation
+  const challengeKey = `wa:challenge:${waAccount.instanceId}:${challengeCode}`;
   const sessionKey = `wa:session:${challengeId}`;
 
   const challengeData = {
     challengeId,
     integrationId,
+    instanceId: waAccount.instanceId,
+    clientId: client._id.toString(),
+    businessNumber,
     pollToken,
     createdAt: Date.now(),
   };
@@ -164,6 +223,7 @@ export async function createWhatsAppChallenge(params: CreateChallengeParams): Pr
   const sessionData = {
     challengeCode,
     integrationId,
+    instanceId: waAccount.instanceId,
     pollToken,
     verified: false,
     createdAt: Date.now(),
@@ -203,15 +263,40 @@ export async function handleInboundVerificationMessage(
   const match = text.trim().match(/^VERIFY\s+([A-Fa-f0-9]{32})$/i);
   if (!match) return false;
 
+  // Strict JID eligibility: Reject group chats, LID privacy identities, broadcasts, newsletters
+  if (!chatId || typeof chatId !== 'string') return false;
+  if (
+    chatId.endsWith('@g.us') ||
+    chatId.endsWith('@lid') ||
+    chatId.endsWith('@broadcast') ||
+    chatId.endsWith('@newsletter')
+  ) {
+    logger.warn('Rejected verification from unsupported or group JID', { chatId, instanceId });
+    return false;
+  }
+  if (!chatId.endsWith('@s.whatsapp.net') && !chatId.endsWith('@c.us')) {
+    logger.warn('Rejected verification from non-user JID', { chatId, instanceId });
+    return false;
+  }
+
+  // Extract and validate sender phone directly from standard WhatsApp user JID
+  const userPart = chatId.split('@')[0].split(':')[0];
+  if (!/^\d{7,15}$/.test(userPart)) {
+    logger.warn('Could not derive valid phone from incoming WhatsApp sender', { chatId });
+    return false;
+  }
+  const senderPhone = normalizePhone(userPart);
+
   const challengeCode = match[1].toUpperCase();
   const redis = getRedisClient();
 
-  const challengeKey = `wa:challenge:${challengeCode}`;
+  // Look up challenge namespaced to the receiving instanceId to prevent cross-tenant leaks
+  const challengeKey = `wa:challenge:${instanceId}:${challengeCode}`;
 
   // Atomically get and delete the challenge key to prevent replay or concurrent consumption
   const rawChallenge = await redis.getdel(challengeKey);
   if (!rawChallenge) {
-    logger.warn('Inbound WhatsApp verification received invalid or already consumed code', { instanceId });
+    logger.warn('Inbound WhatsApp verification received invalid, foreign, or already consumed code', { instanceId });
     return false;
   }
 
@@ -222,12 +307,12 @@ export async function handleInboundVerificationMessage(
     return false;
   }
 
-  // Extract sender phone directly from WhatsApp chatId (e.g. 918698884383:1@s.whatsapp.net -> 918698884383)
-  const userPart = chatId.split('@')[0].split(':')[0];
-  const senderPhone = normalizePhone(userPart);
-
-  if (!senderPhone || senderPhone.length < 7) {
-    logger.warn('Could not derive sender phone from incoming WhatsApp message', { chatId });
+  // Explicit Tenant & Instance Verification
+  if (challenge.instanceId !== instanceId) {
+    logger.warn('Cross-tenant verification attempt blocked', {
+      challengeInstanceId: challenge.instanceId,
+      receivingInstanceId: instanceId,
+    });
     return false;
   }
 
@@ -239,6 +324,7 @@ export async function handleInboundVerificationMessage(
   const updatedSession = {
     challengeCode,
     integrationId: challenge.integrationId,
+    instanceId,
     pollToken: challenge.pollToken,
     verified: true,
     verifiedMobile: senderPhone,
@@ -254,6 +340,7 @@ export async function handleInboundVerificationMessage(
   logger.info('WhatsApp inbound verification successful', {
     integrationId: challenge.integrationId,
     challengeId: challenge.challengeId,
+    instanceId,
   });
 
   // Send operational acknowledgement reply back to the sender
