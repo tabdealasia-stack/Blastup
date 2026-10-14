@@ -229,26 +229,33 @@ export async function handleIntegration(req: Request, res: Response, next: NextF
     // 6. Downstream Notification & Event Dispatch
     const eventId = 'wig-' + Date.now() + '-' + crypto.randomUUID();
 
-    await integration.populate('clientId');
-    const client = integration.clientId as any;
+    if (integration.sinkNotification) {
+      logger.info('Staging notification sink active: enquiry accepted without dispatching outbound notification', {
+        integrationId,
+        eventId,
+      });
+    } else {
+      await integration.populate('clientId');
+      const client = integration.clientId as any;
 
-    const recipient = client.whatsappNumber;
-    if (!recipient) {
-      logger.error('Client has no WhatsApp number configured for internal alert', { clientId: client?._id });
-      throw Boom.badImplementation('Internal configuration error');
+      const recipient = client?.whatsappNumber;
+      if (!recipient) {
+        logger.error('Client has no WhatsApp number configured for internal alert', { clientId: client?._id });
+        throw Boom.badImplementation('Internal configuration error');
+      }
+
+      await sendNotificationEvent({
+        clientId: client._id.toString(),
+        apiKeyId: integration._id.toString(),
+        event: integration.targetEvent,
+        eventId: eventId,
+        to: recipient,
+        variables: {
+          ...payload,
+          source: 'website_gateway',
+        },
+      });
     }
-
-    await sendNotificationEvent({
-      clientId: client._id.toString(),
-      apiKeyId: integration._id.toString(),
-      event: integration.targetEvent,
-      eventId: eventId,
-      to: recipient,
-      variables: {
-        ...payload,
-        source: 'website_gateway',
-      },
-    });
 
     const successResponse = { success: true, message: 'Your request has been received.' };
 

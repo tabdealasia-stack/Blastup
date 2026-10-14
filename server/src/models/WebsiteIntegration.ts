@@ -18,6 +18,7 @@ export interface IWebsiteIntegration extends Document {
   rateLimitPerDay: number;
   verificationMethod?: VerificationMethod;
   requiresMobileVerification?: boolean;
+  sinkNotification?: boolean;
   status: WebsiteIntegrationStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -73,6 +74,10 @@ const websiteIntegrationSchema = new Schema<IWebsiteIntegration>(
       default: 'none',
     },
     requiresMobileVerification: {
+      type: Boolean,
+      default: false,
+    },
+    sinkNotification: {
       type: Boolean,
       default: false,
     },

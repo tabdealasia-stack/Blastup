@@ -96,6 +96,9 @@ export async function createIntegration(
       },
       rateLimitPerIpPerHour: data.rateLimitPerIpPerHour,
       rateLimitPerDay: data.rateLimitPerDay,
+      verificationMethod: data.verificationMethod ?? "none",
+      requiresMobileVerification: data.requiresMobileVerification ?? false,
+      sinkNotification: data.sinkNotification ?? false,
       status: "active",
     });
 
@@ -131,6 +134,8 @@ export async function updateIntegration(
     if (data.rateLimitPerDay !== undefined)
       integration.rateLimitPerDay = data.rateLimitPerDay;
     if (data.status) integration.status = data.status;
+    if (data.sinkNotification !== undefined)
+      integration.sinkNotification = Boolean(data.sinkNotification);
 
     if (data.captcha) {
       integration.captcha.provider = data.captcha.provider;
